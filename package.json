@@ -1,0 +1,47 @@
+{
+  "name": "github-contribution-api",
+  "version": "3.0.0",
+  "description": "Get contribution count and data for a Github user",
+  "main": "build/index.js",
+  "scripts": {
+    "build": "rm -f build/* && tsc",
+    "dev": "nodemon src/index.ts --exec ts-node src/index.ts",
+    "postinstall": "npm run build",
+    "start": "node build/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/grubersjoe/github-contributions-api.git"
+  },
+  "keywords": [
+    "github",
+    "contributions",
+    "api",
+    "node"
+  ],
+  "author": "Jonathan Gruber <gruberjonathan@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "git+https://github.com/grubersjoe/github-contributions-api.git"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "cheerio": "^0.22.0",
+    "cors": "^2.8.4",
+    "express": "^4.16.3",
+    "memory-cache": "^0.2.0",
+    "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {
+    "@types/body-parser": "^1.19.0",
+    "@types/cheerio": "^0.22.23",
+    "@types/cors": "^2.8.9",
+    "@types/express": "^4.17.9",
+    "@types/lodash": "^4.14.166",
+    "@types/memory-cache": "^0.2.1",
+    "@types/node-fetch": "^2.5.7",
+    "nodemon": "^2.0.6",
+    "prettier": "^2.2.1",
+    "typescript": "^4.1.3"
+  }
+}
