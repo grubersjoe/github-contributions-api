@@ -1,24 +1,25 @@
 import cheerio from 'cheerio';
 import fetch from 'node-fetch';
-import { Years } from '.';
+import { ParsedQuery } from '.';
 
 type Year = number | 'lastYear';
+type Level = 0 | 1 | 2 | 3 | 4;
 
 interface Contribution {
   date: string;
   count: number;
-  level: number;
+  level: Level;
 }
 
-interface YearData {
-  years: {
+interface Response {
+  total: {
     [year: number]: number;
-    [year: string]: number; // lastYear
+    [year: string]: number; // 'lastYear;
   };
   contributions: Array<Contribution>;
 }
 
-interface NestedYearData {
+interface NestedResponse {
   [year: number]: {
     [month: number]: {
       [day: number]: Contribution;
@@ -35,7 +36,7 @@ const generalError = (username?: string) =>
     Please open an issue: https://github.com/grubersjoe/github-contributions-api/issues.
   `);
 
-async function fetchYearLinks(username: string, years: Years) {
+async function fetchYearLinks(username: string, query: ParsedQuery) {
   const data = await fetch(`https://github.com/${username}`);
   const $ = cheerio.load(await data.text());
 
@@ -54,14 +55,14 @@ async function fetchYearLinks(username: string, years: Years) {
         href,
       };
     })
-    .filter(link => (years.all ? true : years.subset.includes(link.year)));
+    .filter(link => (query.allYears ? true : query.years.includes(link.year)));
 }
 
-async function fetchDataForYear(
+async function fetchContributionsForYear(
   year: Year,
   url: string,
   format?: 'nested',
-): Promise<YearData | NestedYearData> {
+): Promise<Response | NestedResponse> {
   const data = await fetch(`https://github.com${url}`);
 
   const $ = cheerio.load(await data.text());
@@ -91,7 +92,7 @@ async function fetchDataForYear(
     }
 
     const count = parseInt(attr.count);
-    const level = parseInt(attr.level);
+    const level = parseInt(attr.level) as Level;
 
     if (isNaN(count) || isNaN(level)) {
       throw generalError();
@@ -110,53 +111,57 @@ async function fetchDataForYear(
   };
 
   if (format === 'nested') {
-    return $days.get().reduce<NestedYearData>((o, day: Node) => {
+    return $days.get().reduce<NestedResponse>((data, day: Node) => {
       const { date, contribution } = parseDay(day);
       const [y, m, d] = date;
 
-      if (!o[y]) o[y] = { total };
-      if (!o[y][m]) o[y][m] = {};
+      if (!data[y]) data[y] = { total };
+      if (!data[y][m]) data[y][m] = {};
 
-      o[y][m][d] = contribution;
+      data[y][m][d] = contribution;
 
-      return o;
+      return data;
     }, {});
   }
 
   return {
-    years: {
+    total: {
       [year]: total,
     },
     contributions: $days.get().map(day => parseDay(day).contribution),
   };
 }
 
-export async function fetchDataForYears(
+export async function fetchContributionsForQuery(
   username: string,
-  years: Years,
-  format?: 'nested',
+  query: ParsedQuery,
 ) {
-  const yearLinks = await fetchYearLinks(username, years);
-  const yearDataPromises = yearLinks.map(link =>
-    fetchDataForYear(link.year, link.href, format),
+  const yearLinks = await fetchYearLinks(username, query);
+  const contributionsForYear = yearLinks.map(link =>
+    fetchContributionsForYear(link.year, link.href, query.format),
   );
 
-  if (years.withLastYear) {
-    yearDataPromises.push(fetchDataForYear('lastYear', `/${username}`, format));
+  if (query.lastYear) {
+    contributionsForYear.push(
+      fetchContributionsForYear('lastYear', `/${username}`, query.format),
+    );
   }
 
-  return Promise.all(yearDataPromises).then(yearData => {
-    if (format === 'nested') {
-      return yearData.reduce((acc, curr) => ({ ...acc, ...curr }), {});
+  return Promise.all(contributionsForYear).then(contributions => {
+    if (query.format === 'nested') {
+      return (contributions as Array<NestedResponse>).reduce(
+        (acc, curr) => ({ ...acc, ...curr }),
+        {},
+      );
     }
 
-    return (yearData as Array<YearData>).reduce(
+    return (contributions as Array<Response>).reduce(
       (acc, curr) => ({
-        years: { ...acc.years, ...curr.years },
+        total: { ...acc.total, ...curr.total },
         contributions: [...acc.contributions, ...curr.contributions],
       }),
       {
-        years: {},
+        total: {},
         contributions: [],
       },
     );

@@ -3,12 +3,13 @@ import bodyParser from 'body-parser';
 import cache from 'memory-cache';
 import cors from 'cors';
 
-import { fetchDataForYears } from './fetch';
+import { fetchContributionsForQuery } from './fetch';
 
-export interface Years {
-  all: boolean;
-  subset: Array<number>;
-  withLastYear: boolean;
+export interface ParsedQuery {
+  years: Array<number>;
+  allYears: boolean;
+  lastYear: boolean;
+  format?: 'nested';
 }
 
 const app = express();
@@ -20,7 +21,7 @@ app.use(
   }),
 );
 
-app.get('/v3/:username', async (req, res, next) => {
+app.get('/v4/:username', async (req, res, next) => {
   const { username } = req.params;
   const { format } = req.query;
 
@@ -30,39 +31,28 @@ app.get('/v3/:username', async (req, res, next) => {
       .send('Query parameter `format` must be `nested` or undefined');
   }
 
-  let years: Years = {
-    all: false,
-    subset: [],
-    withLastYear: false,
+  const years = req.query.y
+    ? typeof req.query.y === 'string'
+      ? [req.query.y]
+      : (req.query.y as Array<string>)
+    : ['all']; // default
+
+  const query: ParsedQuery = {
+    years: years.map(y => parseInt(y)).filter(y => !isNaN(y)),
+    allYears: years.includes('all'),
+    lastYear: years.includes('lastYear'),
+    format: format as 'nested' | undefined,
   };
 
-  if (typeof req.query.y === 'string') {
-    years.all = req.query.y === 'all';
-    years.subset = [parseInt(req.query.y)].filter(n => !isNaN(n));
-    years.withLastYear = req.query.y === 'lastYear';
-  }
-
-  if (Array.isArray(req.query.y)) {
-    years.all = (req.query.y as Array<string>).includes('all');
-    years.subset = (req.query.y as Array<string>)
-      .map(y => parseInt(y))
-      .filter(n => !isNaN(n));
-    years.withLastYear = (req.query.y as Array<string>).includes('lastYear');
-  }
-
   try {
-    const key = `${username}-${JSON.stringify(years)}-${format}`;
+    const key = `${username}-${JSON.stringify(query)}-${format}`;
     const cached = cache.get(key);
 
     if (cached !== null) {
       return res.json(cached);
     }
 
-    const data = await fetchDataForYears(
-      username,
-      years,
-      format as 'nested' | undefined,
-    );
+    const data = await fetchContributionsForQuery(username, query);
 
     cache.put(key, data, 1000 * 3600); // Store for an hour
 

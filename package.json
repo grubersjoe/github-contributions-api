@@ -1,6 +1,6 @@
 {
   "name": "github-contribution-api",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "Get contribution count and data for a Github user",
   "main": "build/index.js",
   "scripts": {
@@ -42,6 +42,7 @@
     "@types/node-fetch": "^2.5.7",
     "nodemon": "^2.0.6",
     "prettier": "^2.2.1",
+    "ts-node": "^9.1.1",
     "typescript": "^4.1.3"
   }
 }
