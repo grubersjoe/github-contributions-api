@@ -11,7 +11,7 @@ interface Contribution {
   level: Level;
 }
 
-interface Response {
+export interface Response {
   total: {
     [year: number]: number;
     [year: string]: number; // 'lastYear;
@@ -19,7 +19,7 @@ interface Response {
   contributions: Array<Contribution>;
 }
 
-interface NestedResponse {
+export interface NestedResponse {
   [year: number]: {
     [month: number]: {
       [day: number]: Contribution;
@@ -28,14 +28,9 @@ interface NestedResponse {
   };
 }
 
-const generalError = (username?: string) =>
-  new Error(`
-    Unable to retrieve contribution data${
-      username ? ` for user ${username}` : ''
-    }.
-    Please open an issue: https://github.com/grubersjoe/github-contributions-api/issues.
-  `);
-
+/**
+ * @throws Error
+ */
 async function fetchYearLinks(username: string, query: ParsedQuery) {
   const data = await fetch(`https://github.com/${username}`);
   const $ = cheerio.load(await data.text());
@@ -47,17 +42,20 @@ async function fetchYearLinks(username: string, query: ParsedQuery) {
       const href = $a.attr('href');
 
       if (!href) {
-        throw generalError(username);
+        throw Error('Unable to fetch year link.');
       }
 
       return {
-        year: parseInt($a.text().trim()),
+        year: parseInt($a.text().trim(), 10),
         href,
       };
     })
-    .filter(link => (query.allYears ? true : query.years.includes(link.year)));
+    .filter(link => (query.fetchAll ? true : query.years.includes(link.year)));
 }
 
+/**
+ * @throws Error if scraping of GitHub profile fails
+ */
 async function fetchContributionsForYear(
   year: Year,
   url: string,
@@ -74,10 +72,10 @@ async function fetchContributionsForYear(
     .match(/^([0-9,]+)\s/);
 
   if (!totalMatch) {
-    throw generalError();
+    throw Error('Unable to fetch total contributions count');
   }
 
-  const total = parseInt(totalMatch[0].replace(/,/g, ''));
+  const total = parseInt(totalMatch[0].replace(/,/g, ''), 10);
 
   const parseDay = (day: Node) => {
     const $day = $(day);
@@ -88,14 +86,18 @@ async function fetchContributionsForYear(
     };
 
     if (!attr.count || !attr.date || !attr.level) {
-      throw generalError();
+      throw Error('Unable to fetch contribution data for day.');
     }
 
-    const count = parseInt(attr.count);
-    const level = parseInt(attr.level) as Level;
+    const count = parseInt(attr.count, 10);
+    const level = parseInt(attr.level, 10) as Level;
 
-    if (isNaN(count) || isNaN(level)) {
-      throw generalError();
+    if (isNaN(count)) {
+      throw Error('Unable to parse contribution count for day.');
+    }
+
+    if (isNaN(level)) {
+      throw Error('Unable to parse contribution level for day.');
     }
 
     const contribution: Contribution = {
@@ -105,7 +107,7 @@ async function fetchContributionsForYear(
     };
 
     return {
-      date: attr.date.split('-').map(d => parseInt(d)),
+      date: attr.date.split('-').map(d => parseInt(d, 10)),
       contribution,
     };
   };

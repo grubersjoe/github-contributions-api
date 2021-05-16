@@ -94,13 +94,14 @@ https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?format=nested
 ### The `y` query parameter
 
 Use the `y` (year) query parameter to retrieve the data for a specific year, a
-set of query, the _last_ year (GitHub's default view), or the data for _all_
-query (default when `y` parameter is omitted):
+set of years, the _last_ year (GitHub's default view), or the data for _all_
+years (default when `y` parameter is omitted):
 
 ```shell
+https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?y=2020
 https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?y=2016&y=2017
-https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?y=lastYear
-https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?y=allYears # default
+https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?y=last
+https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?y=all # default
 ```
 
 ```json

@@ -1,75 +1,100 @@
-import express, { NextFunction, Request, Response } from 'express';
-import bodyParser from 'body-parser';
+import express from 'express';
 import cache from 'memory-cache';
 import cors from 'cors';
+import {
+  Response as ApiResponse,
+  NestedResponse as ApiNestedResponse,
+} from './fetch';
 
 import { fetchContributionsForQuery } from './fetch';
 
 export interface ParsedQuery {
   years: Array<number>;
-  allYears: boolean;
+  fetchAll: boolean;
   lastYear: boolean;
+  format: QueryParams['format'];
+}
+
+interface Params {
+  username: string;
+}
+
+interface QueryParams {
+  y?: string | Array<string>;
   format?: 'nested';
 }
+
+type Request = express.Request<
+  Params,
+  ApiResponse | ApiNestedResponse | string,
+  {},
+  QueryParams
+>;
 
 const app = express();
 
 app.use(cors());
-app.use(
-  bodyParser.json({
-    limit: '1mb',
-  }),
-);
 
-app.get('/v4/:username', async (req, res, next) => {
+app.get('/v4/:username', async (req: Request, res, next) => {
   const { username } = req.params;
-  const { format } = req.query;
 
-  if (format !== undefined && format !== 'nested') {
-    res
+  if (req.query.format && req.query.format !== 'nested') {
+    return res
       .status(400)
-      .send('Query parameter `format` must be `nested` or undefined');
+      .send("Query parameter 'format' must be 'nested' or undefined");
   }
 
+  // prettier-ignore
   const years = req.query.y
-    ? typeof req.query.y === 'string'
-      ? [req.query.y]
-      : (req.query.y as Array<string>)
-    : ['all']; // default
+    ? (typeof req.query.y === 'string' ? [req.query.y] : req.query.y)
+    : [];
+
+  if (years.some(y => isNaN(parseInt(y)) && y !== 'all' && y !== 'last')) {
+    return res
+      .status(400)
+      .send("Query parameter 'y' must be an integer, 'all' or 'last'");
+  }
 
   const query: ParsedQuery = {
-    years: years.map(y => parseInt(y)).filter(y => !isNaN(y)),
-    allYears: years.includes('all'),
-    lastYear: years.includes('lastYear'),
-    format: format as 'nested' | undefined,
+    years: years.map(y => parseInt(y, 10)).filter(isFinite),
+    fetchAll: years.includes('all') || years.length === 0,
+    lastYear: years.includes('last'),
+    format: req.query.format,
   };
 
+  const key = `${username}-${JSON.stringify(query)}`;
+  const cached = cache.get(key);
+
+  if (cached !== null) {
+    return res.json(cached);
+  }
+
   try {
-    const key = `${username}-${JSON.stringify(query)}-${format}`;
-    const cached = cache.get(key);
+    const response = await fetchContributionsForQuery(username, query);
+    cache.put(key, response, 1000 * 3600); // Store for an hour
 
-    if (cached !== null) {
-      return res.json(cached);
-    }
-
-    const data = await fetchContributionsForQuery(username, query);
-
-    cache.put(key, data, 1000 * 3600); // Store for an hour
-
-    res.json(data);
+    return res.json(response);
   } catch (err) {
-    console.error(err);
     next(
-      new Error(`Fetching profile of ${username} has failed: ${err.message}`),
+      new Error(
+        `Fetching profile of \'${username}\' has failed: ${err.message}`,
+      ),
     );
   }
 });
 
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  res.status(500).send({
-    error: err.message,
-  });
-});
+// Error handler
+app.use(
+  (
+    err: Error,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction,
+  ) =>
+    res.status(500).send({
+      error: err.message,
+    }),
+);
 
 app.listen(process.env.PORT ?? 8080, () =>
   console.log(
