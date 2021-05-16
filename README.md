@@ -1,5 +1,7 @@
 # GitHub Contributions API v4
 
+![CI](https://github.com/grubersjoe/github-contributions-api/actions/workflows/test.yml/badge.svg)
+
 A simple API that returns number of GitHub contributions based on a users GitHub
 profile. This API is used by
 [React GitHub Calendar](https://github.com/grubersjoe/react-github-calendar)
