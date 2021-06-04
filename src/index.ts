@@ -1,6 +1,7 @@
 import express from 'express';
 import cache from 'memory-cache';
 import cors from 'cors';
+import compression from 'compression';
 import {
   Response as ApiResponse,
   NestedResponse as ApiNestedResponse,
@@ -34,6 +35,7 @@ type Request = express.Request<
 const app = express();
 
 app.use(cors());
+app.use(compression());
 
 app.get('/v4/:username', async (req: Request, res, next) => {
   const { username } = req.params;
