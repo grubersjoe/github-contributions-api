@@ -1,7 +1,7 @@
 import express, { NextFunction, Request, Response } from 'express';
-import bodyParser from 'body-parser';
 import cache from 'memory-cache';
 import cors from 'cors';
+import compression from 'compression';
 
 import { fetchDataForYears } from './fetch';
 
@@ -14,11 +14,7 @@ export interface Years {
 const app = express();
 
 app.use(cors());
-app.use(
-  bodyParser.json({
-    limit: '1mb',
-  }),
-);
+app.use(compression());
 
 app.get('/v3/:username', async (req, res, next) => {
   const { username } = req.params;
