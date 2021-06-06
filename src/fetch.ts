@@ -2,8 +2,8 @@ import cheerio from 'cheerio';
 import fetch from 'node-fetch';
 import { ParsedQuery } from '.';
 
-type Year = number | 'lastYear';
 type Level = 0 | 1 | 2 | 3 | 4;
+type Year = number | 'lastYear';
 
 interface Contribution {
   date: string;
@@ -20,11 +20,16 @@ export interface Response {
 }
 
 export interface NestedResponse {
-  [year: number]: {
-    [month: number]: {
-      [day: number]: Contribution;
+  total: {
+    [year: number]: number;
+    [year: string]: number; // 'lastYear;
+  };
+  contributions: {
+    [year: number]: {
+      [month: number]: {
+        [day: number]: Contribution;
+      };
     };
-    total: number;
   };
 }
 
@@ -112,24 +117,29 @@ async function fetchContributionsForYear(
     };
   };
 
+  const response = {
+    total: {
+      [year]: total,
+    },
+    contributions: {},
+  };
+
   if (format === 'nested') {
     return $days.get().reduce<NestedResponse>((data, day: Node) => {
       const { date, contribution } = parseDay(day);
       const [y, m, d] = date;
 
-      if (!data[y]) data[y] = { total };
-      if (!data[y][m]) data[y][m] = {};
+      if (!data.contributions[y]) data.contributions[y] = {};
+      if (!data.contributions[y][m]) data.contributions[y][m] = {};
 
-      data[y][m][d] = contribution;
+      data.contributions[y][m][d] = contribution;
 
       return data;
-    }, {});
+    }, response);
   }
 
   return {
-    total: {
-      [year]: total,
-    },
+    ...response,
     contributions: $days.get().map(day => parseDay(day).contribution),
   };
 }
@@ -137,7 +147,7 @@ async function fetchContributionsForYear(
 export async function fetchContributionsForQuery(
   username: string,
   query: ParsedQuery,
-) {
+): Promise<Response | NestedResponse> {
   const yearLinks = await fetchYearLinks(username, query);
   const contributionsForYear = yearLinks.map(link =>
     fetchContributionsForYear(link.year, link.href, query.format),
@@ -148,12 +158,17 @@ export async function fetchContributionsForQuery(
       fetchContributionsForYear('lastYear', `/${username}`, query.format),
     );
   }
-
   return Promise.all(contributionsForYear).then(contributions => {
     if (query.format === 'nested') {
       return (contributions as Array<NestedResponse>).reduce(
-        (acc, curr) => ({ ...acc, ...curr }),
-        {},
+        (acc, curr) => ({
+          total: { ...acc.total, ...curr.total },
+          contributions: { ...acc.contributions, ...curr.contributions },
+        }),
+        {
+          total: {},
+          contributions: {},
+        },
       );
     }
 

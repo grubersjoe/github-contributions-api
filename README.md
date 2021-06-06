@@ -150,11 +150,16 @@ interface Response {
 }
 
 interface NestedResponse {
-  [year: number]: {
-    [month: number]: {
-      [day: number]: Contribution;
+  total: {
+    [year: number]: number;
+    [year: string]: number; // 'lastYear;
+  };
+  contributions: {
+    [year: number]: {
+      [month: number]: {
+        [day: number]: Contribution;
+      };
     };
-    total: number;
   };
 }
 ```
