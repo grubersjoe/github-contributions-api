@@ -1,7 +1,11 @@
 import express from 'express';
+import path from 'path';
 import cache from 'memory-cache';
 import cors from 'cors';
 import compression from 'compression';
+import morgan from 'morgan';
+import { createStream } from 'rotating-file-stream';
+
 import {
   Response as ApiResponse,
   NestedResponse as ApiNestedResponse,
@@ -36,6 +40,25 @@ const app = express();
 
 app.use(cors());
 app.use(compression());
+
+// Access log (everything)
+app.use(
+  morgan('short', {
+    stream: createStream('access.log', {
+      path: path.join(__dirname, '../logs'),
+      interval: '1M', // Rotate every month
+    }),
+  }),
+);
+
+// Log to stdout (errors only)
+app.use(
+  morgan('short', {
+    skip: function (req, res) {
+      return res.statusCode < 400;
+    },
+  }),
+);
 
 app.get('/v4/:username', async (req: Request, res, next) => {
   const { username } = req.params;

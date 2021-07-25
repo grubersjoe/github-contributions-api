@@ -1,6 +1,6 @@
 {
   "name": "github-contribution-api",
-  "version": "4.2.0",
+  "version": "4.3.0",
   "description": "Get contribution count and data for a Github user",
   "main": "build/server.js",
   "scripts": {
@@ -31,7 +31,9 @@
     "cors": "^2.8.4",
     "express": "^4.16.3",
     "memory-cache": "^0.2.0",
-    "node-fetch": "^2.6.1"
+    "morgan": "^1.10.0",
+    "node-fetch": "^2.6.1",
+    "rotating-file-stream": "^2.1.5"
   },
   "devDependencies": {
     "@babel/core": "^7.14.2",
@@ -43,6 +45,7 @@
     "@types/express": "^4.17.11",
     "@types/jest": "^26.0.23",
     "@types/memory-cache": "^0.2.1",
+    "@types/morgan": "^1.9.3",
     "@types/node-fetch": "^2.5.10",
     "@types/supertest": "^2.0.11",
     "babel-jest": "^26.6.3",
