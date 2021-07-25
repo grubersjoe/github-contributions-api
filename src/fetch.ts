@@ -1,6 +1,8 @@
 import cheerio from 'cheerio';
 import fetch from 'node-fetch';
+
 import { ParsedQuery } from '.';
+import { UserNotFoundError } from './errors';
 
 type Level = 0 | 1 | 2 | 3 | 4;
 type Year = number | 'lastYear';
@@ -35,13 +37,19 @@ export interface NestedResponse {
 
 /**
  * @throws Error
+ * @throws UserNotFoundError
  */
 async function fetchYearLinks(username: string, query: ParsedQuery) {
   const data = await fetch(`https://github.com/${username}`);
   const $ = cheerio.load(await data.text());
 
-  return $('.js-year-link')
-    .get()
+  const yearLinks = $('.js-year-link').get();
+
+  if (yearLinks.length === 0) {
+    throw new UserNotFoundError(username);
+  }
+
+  return yearLinks
     .map(a => {
       const $a = $(a);
       const href = $a.attr('href');
@@ -77,7 +85,7 @@ async function fetchContributionsForYear(
     .match(/^([0-9,]+)\s/);
 
   if (!totalMatch) {
-    throw Error('Unable to fetch total contributions count');
+    throw Error('Unable to fetch total contributions count.');
   }
 
   const total = parseInt(totalMatch[0].replace(/,/g, ''), 10);
@@ -144,6 +152,9 @@ async function fetchContributionsForYear(
   };
 }
 
+/**
+ * @throws UserNotFoundError
+ */
 export async function fetchContributionsForQuery(
   username: string,
   query: ParsedQuery,
