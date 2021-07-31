@@ -44,7 +44,7 @@ app.use(compression());
 
 // Access log (everything)
 app.use(
-  morgan('short', {
+  morgan('combined', {
     stream: createStream('access.log', {
       path: path.join(__dirname, '../logs'),
       interval: '1M', // Rotate every month
@@ -54,7 +54,7 @@ app.use(
 
 // Log to stdout (errors only)
 app.use(
-  morgan('short', {
+  morgan('combined', {
     skip: (req, res) => res.statusCode < 400 || process.env.NODE_ENV === 'test',
   }),
 );
