@@ -59,7 +59,7 @@ async function fetchYearLinks(username: string, query: ParsedQuery) {
       }
 
       return {
-        year: parseInt($a.text().trim(), 10),
+        year: parseInt($a.text().trim()),
         href,
       };
     })
@@ -88,29 +88,37 @@ async function fetchContributionsForYear(
     throw Error('Unable to fetch total contributions count.');
   }
 
-  const total = parseInt(totalMatch[0].replace(/,/g, ''), 10);
+  const total = parseInt(totalMatch[0].replace(/,/g, ''));
 
   const parseDay = (day: Node) => {
     const $day = $(day);
     const attr = {
       date: $day.attr('data-date'),
-      count: $day.attr('data-count'),
       level: $day.attr('data-level'),
     };
 
-    if (!attr.count || !attr.date || !attr.level) {
-      throw Error('Unable to fetch contribution data for day.');
+    if (!attr.date) {
+      throw Error('Unable to parse date attribute');
     }
 
-    const count = parseInt(attr.count, 10);
-    const level = parseInt(attr.level, 10) as Level;
+    if (!attr.level) {
+      throw Error('Unable to parse level attribute');
+    }
+
+    const countMatch = $day
+      .text()
+      .trim()
+      .match(/^[1-9]+\s/) ?? ['0'];
+
+    const count = parseInt(countMatch[0]);
+    const level = parseInt(attr.level) as Level;
 
     if (isNaN(count)) {
-      throw Error('Unable to parse contribution count for day.');
+      throw Error('Unable to parse contribution count for day');
     }
 
     if (isNaN(level)) {
-      throw Error('Unable to parse contribution level for day.');
+      throw Error('Unable to parse contribution level for day');
     }
 
     const contribution: Contribution = {
@@ -120,7 +128,7 @@ async function fetchContributionsForYear(
     };
 
     return {
-      date: attr.date.split('-').map(d => parseInt(d, 10)),
+      date: attr.date.split('-').map(d => parseInt(d)),
       contribution,
     };
   };
