@@ -122,10 +122,12 @@ app.use(
     req: express.Request,
     res: express.Response,
     next: express.NextFunction,
-  ) =>
+  ) => {
+    console.error(err);
     res.status(500).send({
       error: err.message,
-    }),
+    });
+  },
 );
 
 export default app;
