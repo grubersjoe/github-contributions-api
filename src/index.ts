@@ -7,12 +7,11 @@ import morgan from 'morgan';
 import { createStream } from 'rotating-file-stream';
 
 import {
-  Response as ApiResponse,
+  fetchContributionsForQuery,
   NestedResponse as ApiNestedResponse,
+  Response as ApiResponse,
+  UserNotFoundError,
 } from './fetch';
-
-import { fetchContributionsForQuery } from './fetch';
-import { UserNotFoundError } from './errors';
 
 export interface ParsedQuery {
   years: Array<number>;
@@ -99,18 +98,19 @@ app.get('/v4/:username', async (req: Request, res, next) => {
 
     return res.json(response);
   } catch (error) {
-    switch (error.constructor) {
-      case UserNotFoundError:
-        return res.status(404).send({
-          error: error.message,
-        });
-      default:
-        next(
-          new Error(
-            `Unable to fetch contribution data of \'${username}\': ${error.message}.`,
-          ),
-        );
+    if (error instanceof UserNotFoundError) {
+      return res.status(404).send({
+        error: error.message,
+      });
     }
+
+    next(
+      new Error(
+        `Unable to fetch contribution data of '${username}': ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }.`,
+      ),
+    );
   }
 });
 

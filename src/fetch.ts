@@ -1,8 +1,6 @@
 import cheerio from 'cheerio';
-import fetch from 'node-fetch';
 
 import { ParsedQuery } from '.';
-import { UserNotFoundError } from './errors';
 
 type Level = 0 | 1 | 2 | 3 | 4;
 type Year = number | 'lastYear';
@@ -202,4 +200,10 @@ export async function fetchContributionsForQuery(
       },
     );
   });
+}
+
+export class UserNotFoundError extends Error {
+  constructor(username: string) {
+    super(`User '${username}' not found`);
+  }
 }

@@ -1,15 +1,15 @@
 {
-  "include": [ "src/**/*" ],
+  "include": ["src/**/*", "tests/**/*"],
   "compilerOptions": {
     "esModuleInterop": true,
-    "lib": ["ES2019", "DOM"],
+    "lib": ["ES2022"],
     "module": "commonjs",
+    "target": "ES2022",
     "moduleResolution": "node",
     "outDir": "build",
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,
-    "strict": true,
-    "target": "ES2019"
+    "strict": true
   }
 }
