@@ -4,6 +4,7 @@
   "version": "4.5.0",
   "author": "Jonathan Gruber <gruberjonathan@gmail.com>",
   "license": "MIT",
+  "private": true,
   "main": "build/server.js",
   "engines": {
     "node": ">=18"
