@@ -103,10 +103,11 @@ async function fetchContributionsForYear(
       throw Error('Unable to parse level attribute');
     }
 
-    const countMatch = $day
-      .text()
-      .trim()
-      .match(/^[1-9]+\s/) ?? ['0'];
+    const countMatch = $day.text().trim().match(/^\d+/);
+
+    if (!countMatch) {
+      throw Error('Unable to parse contribution count for day');
+    }
 
     const count = parseInt(countMatch[0]);
     const level = parseInt(attr.level) as Level;
