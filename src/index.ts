@@ -103,7 +103,7 @@ app.use(
     res: express.Response,
     next: express.NextFunction,
   ) => {
-    console.error(err);
+    console.error(new Date().toUTCString(), err);
     res.status(500).send({
       error: err.message,
     });
