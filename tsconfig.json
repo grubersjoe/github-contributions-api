@@ -1,5 +1,5 @@
 {
-  "include": ["src/**/*", "tests/**/*"],
+  "include": ["src"],
   "compilerOptions": {
     "esModuleInterop": true,
     "lib": ["ES2022"],
