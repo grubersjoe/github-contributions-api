@@ -75,7 +75,7 @@ async function fetchContributionsForYear(
   const data = await fetch(`https://github.com${url}`);
 
   const $ = cheerio.load(await data.text());
-  const $days = $('.js-calendar-graph-svg .ContributionCalendar-day');
+  const $days = $('..js-calendar-graph-table .ContributionCalendar-day');
 
   const totalMatch = $('.js-yearly-contributions h2')
     .text()
