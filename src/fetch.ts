@@ -75,7 +75,14 @@ async function fetchContributionsForYear(
   const data = await fetch(`https://github.com${url}`);
 
   const $ = cheerio.load(await data.text());
-  const $days = $('.js-calendar-graph-svg .ContributionCalendar-day');
+  const $days = $('.js-calendar-graph-table .ContributionCalendar-day');
+
+  const sortedDays: Array<Element> = $days.get().sort((a, b) => {
+    const dateA = $(a).attr('data-date') ?? '';
+    const dateB = $(b).attr('data-date') ?? '';
+
+    return dateA.localeCompare(dateB, 'en');
+  });
 
   const totalMatch = $('.js-yearly-contributions h2')
     .text()
@@ -136,7 +143,7 @@ async function fetchContributionsForYear(
   };
 
   if (format === 'nested') {
-    return $days.get().reduce<NestedResponse>((data, day: Node) => {
+    return sortedDays.reduce<NestedResponse>((data, day: Node) => {
       const { date, contribution } = parseDay(day);
       const [y, m, d] = date;
 
@@ -151,7 +158,7 @@ async function fetchContributionsForYear(
 
   return {
     ...response,
-    contributions: $days.get().map(day => parseDay(day).contribution),
+    contributions: sortedDays.map(day => parseDay(day).contribution),
   };
 }
 
@@ -172,6 +179,7 @@ export async function fetchContributionsForQuery(
       fetchContributionsForYear('lastYear', `/${username}`, query.format),
     );
   }
+
   return Promise.all(contributionsForYear).then(contributions => {
     if (query.format === 'nested') {
       return (contributions as Array<NestedResponse>).reduce(
