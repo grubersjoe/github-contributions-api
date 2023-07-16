@@ -48,7 +48,7 @@ async function fetchYearLinks(username: string, query: ParsedQuery) {
   }
 
   return yearLinks
-    .map(a => {
+    .map((a) => {
       const $a = $(a);
       const href = $a.attr('href');
 
@@ -61,7 +61,9 @@ async function fetchYearLinks(username: string, query: ParsedQuery) {
         href,
       };
     })
-    .filter(link => (query.fetchAll ? true : query.years.includes(link.year)));
+    .filter((link) =>
+      query.fetchAll ? true : query.years.includes(link.year),
+    );
 }
 
 /**
@@ -130,7 +132,7 @@ async function fetchContributionsForYear(
     };
 
     return {
-      date: attr.date.split('-').map(d => parseInt(d)),
+      date: attr.date.split('-').map((d) => parseInt(d)),
       contribution,
     };
   };
@@ -158,7 +160,7 @@ async function fetchContributionsForYear(
 
   return {
     ...response,
-    contributions: sortedDays.map(day => parseDay(day).contribution),
+    contributions: sortedDays.map((day) => parseDay(day).contribution),
   };
 }
 
@@ -170,7 +172,7 @@ export async function fetchContributionsForQuery(
   query: ParsedQuery,
 ): Promise<Response | NestedResponse> {
   const yearLinks = await fetchYearLinks(username, query);
-  const contributionsForYear = yearLinks.map(link =>
+  const contributionsForYear = yearLinks.map((link) =>
     fetchContributionsForYear(link.year, link.href, query.format),
   );
 
@@ -180,7 +182,7 @@ export async function fetchContributionsForQuery(
     );
   }
 
-  return Promise.all(contributionsForYear).then(contributions => {
+  return Promise.all(contributionsForYear).then((contributions) => {
     if (query.format === 'nested') {
       return (contributions as Array<NestedResponse>).reduce(
         (acc, curr) => ({

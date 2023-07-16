@@ -47,19 +47,21 @@ app.get('/v4/:username', async (req: Request, res, next) => {
     });
   }
 
-  // prettier-ignore
-  const years = req.query.y != null
-    ? (typeof req.query.y === 'string' ? [req.query.y] : req.query.y)
-    : [];
+  const years =
+    req.query.y != null
+      ? typeof req.query.y === 'string'
+        ? [req.query.y]
+        : req.query.y
+      : [];
 
-  if (years.some(y => !/^\d+$/.test(y) && y !== 'all' && y !== 'last')) {
+  if (years.some((y) => !/^\d+$/.test(y) && y !== 'all' && y !== 'last')) {
     return res.status(400).send({
       error: "Query parameter 'y' must be an integer, 'all' or 'last'",
     });
   }
 
   const query: ParsedQuery = {
-    years: years.map(y => parseInt(y, 10)).filter(isFinite),
+    years: years.map((y) => parseInt(y, 10)).filter(isFinite),
     fetchAll: years.includes('all') || years.length === 0,
     lastYear: years.includes('last'),
     format: req.query.format,
