@@ -1,21 +1,22 @@
 {
   "name": "github-contribution-api",
   "description": "Scrape contribution data of a Github user",
-  "version": "4.5.2",
+  "version": "4.5.3",
   "author": "Jonathan Gruber <gruberjonathan@gmail.com>",
   "license": "MIT",
   "private": true,
   "main": "build/server.js",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "scripts": {
     "build": "rm -rf build/* && tsc",
     "dev": "nodemon src/server.ts --exec ts-node src/server.ts",
     "format": "prettier --write src tests",
     "postinstall": "npm run build",
+    "prestart": "npm run build",
     "start": "node build/server.js",
-    "test": "jest"
+    "test": "jest --silent"
   },
   "repository": {
     "type": "git",
