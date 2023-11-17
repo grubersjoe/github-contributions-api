@@ -53,7 +53,7 @@ async function scrapeYearLinks(username: string, query: ParsedQuery) {
       const href = $a.attr('href');
 
       if (!href) {
-        throw Error('Unable to fetch year link.');
+        throw Error('Unable to parse year link.');
       }
 
       return {
@@ -92,7 +92,7 @@ async function scrapeContributionsForYear(
     .match(/^([0-9,]+)\s/);
 
   if (!totalMatch) {
-    throw Error('Unable to fetch total contributions count.');
+    throw Error('Unable to parse total contributions count.');
   }
 
   const total = parseInt(totalMatch[0].replace(/,/g, ''));
@@ -112,7 +112,11 @@ async function scrapeContributionsForYear(
       throw Error('Unable to parse level attribute');
     }
 
-    const countMatch = $day.text().trim().match(/^\d+/) ?? ['0'];
+    const countMatch = $day.text().trim().match(/^\d+/);
+
+    if (!countMatch) {
+      throw Error('Unable to parse contribution count')
+    }
 
     const count = parseInt(countMatch[0]);
     const level = parseInt(attr.level) as Level;

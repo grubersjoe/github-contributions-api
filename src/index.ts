@@ -88,7 +88,7 @@ app.get('/v4/:username', async (req: Request, res, next) => {
 
     next(
       new Error(
-        `Unable to fetch contribution data of '${username}': ${
+        `Error scraping contribution data of '${username}': ${
           error instanceof Error ? error.message : 'Unknown error'
         }.`,
       ),
