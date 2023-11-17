@@ -116,7 +116,7 @@ describe('The :username endpoint', () => {
       .expect(500)
       .expect((res) =>
         expect(res.body).toStrictEqual({
-          error: `Unable to fetch contribution data of '${username}': unexpected error.`,
+          error: `Error scraping contribution data of '${username}': unexpected error`,
         }),
       );
   });
