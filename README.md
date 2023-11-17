@@ -12,14 +12,14 @@ profile. This API is used by
 ## How to run
 
 ```shell
-yarn
-yarn start
+npm install
+npm start
 ```
 
 For development:
 
 ```shell
-yarn dev
+npm run dev
 ```
 
 ## Usage
