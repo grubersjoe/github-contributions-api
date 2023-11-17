@@ -1,6 +1,8 @@
 import cheerio from 'cheerio';
 
 import { ParsedQuery } from '.';
+import TagElement = cheerio.TagElement;
+import Cheerio = cheerio.Cheerio;
 
 type Level = 0 | 1 | 2 | 3 | 4;
 type Year = number | 'lastYear';
@@ -79,9 +81,9 @@ async function scrapeContributionsForYear(
   const $ = cheerio.load(await page.text());
   const $days = $('.js-calendar-graph-table .ContributionCalendar-day');
 
-  const sortedDays: Array<Element> = $days.get().sort((a, b) => {
-    const dateA = $(a).attr('data-date') ?? '';
-    const dateB = $(b).attr('data-date') ?? '';
+  const sortedDays= $days.get().sort((a: TagElement, b: TagElement) => {
+    const dateA = a.attribs['data-date'] ?? '';
+    const dateB = b.attribs['data-date'] ?? '';
 
     return dateA.localeCompare(dateB, 'en');
   });
@@ -97,49 +99,17 @@ async function scrapeContributionsForYear(
 
   const total = parseInt(totalMatch[0].replace(/,/g, ''));
 
-  const parseDay = (day: Node) => {
-    const $day = $(day);
-    const attr = {
-      date: $day.attr('data-date'),
-      level: $day.attr('data-level'),
-    };
-
-    if (!attr.date) {
-      throw Error('Unable to parse date attribute');
-    }
-
-    if (!attr.level) {
-      throw Error('Unable to parse level attribute');
-    }
-
-    const countMatch = $day.text().trim().match(/^\d+/);
-
-    if (!countMatch) {
-      throw Error('Unable to parse contribution count')
-    }
-
-    const count = parseInt(countMatch[0]);
-    const level = parseInt(attr.level) as Level;
-
-    if (isNaN(count)) {
-      throw Error('Unable to parse contribution count for day');
-    }
-
-    if (isNaN(level)) {
-      throw Error('Unable to parse contribution level for day');
-    }
-
-    const contribution: Contribution = {
-      date: attr.date,
-      count,
-      level,
-    };
-
-    return {
-      date: attr.date.split('-').map((d) => parseInt(d)),
-      contribution,
-    };
-  };
+  // Required for contribution count
+  const tooltipsByDayId = $('.js-calendar-graph tool-tip')
+      .toArray()
+      .reduce<Record<string, Cheerio>>((map, elem) => {
+        const $elem = $(elem);
+        const dayId = $elem.attr('for');
+        if (dayId) {
+          map[dayId] = $elem
+        }
+        return map;
+      }, {});
 
   const response = {
     total: {
@@ -149,8 +119,8 @@ async function scrapeContributionsForYear(
   };
 
   if (format === 'nested') {
-    return sortedDays.reduce<NestedResponse>((data, day: Node) => {
-      const { date, contribution } = parseDay(day);
+    return sortedDays.reduce<NestedResponse>((data, day) => {
+      const { date, contribution } = parseDay(day, tooltipsByDayId);
       const [y, m, d] = date;
 
       if (!data.contributions[y]) data.contributions[y] = {};
@@ -164,9 +134,55 @@ async function scrapeContributionsForYear(
 
   return {
     ...response,
-    contributions: sortedDays.map((day) => parseDay(day).contribution),
+    contributions: sortedDays.map((day) => parseDay(day, tooltipsByDayId).contribution, tooltipsByDayId),
   };
 }
+
+const parseDay = (day: TagElement, tooltipsByDayId: Record<string, Cheerio>) => {
+  const attr = {
+    id: day.attribs['id'],
+    date: day.attribs['data-date'],
+    level: day.attribs['data-level'],
+  };
+
+
+  if (!attr.date) {
+    throw Error('Unable to parse date attribute.');
+  }
+
+  if (!attr.level) {
+    throw Error('Unable to parse level attribute.');
+  }
+
+  let count = 0;
+  if (tooltipsByDayId[attr.id]) {
+    const countMatch = tooltipsByDayId[attr.id].text().trim().match(/^\d+/);
+    if (countMatch) {
+      count = parseInt(countMatch[0]);
+    }
+  }
+
+  const level = parseInt(attr.level) as Level;
+
+  if (isNaN(count)) {
+    throw Error('Unable to parse contribution count.');
+  }
+
+  if (isNaN(level)) {
+    throw Error('Unable to parse contribution level.');
+  }
+
+  const contribution = {
+    date: attr.date,
+    count,
+    level,
+  } satisfies Contribution;
+
+  return {
+    date: attr.date.split('-').map((d) => parseInt(d)),
+    contribution,
+  };
+};
 
 /**
  * @throws UserNotFoundError

@@ -1,7 +1,7 @@
 {
   "name": "github-contribution-api",
   "description": "Scrape contribution data of a Github user",
-  "version": "4.5.3",
+  "version": "4.6.0",
   "author": "Jonathan Gruber <gruberjonathan@gmail.com>",
   "license": "MIT",
   "private": true,
