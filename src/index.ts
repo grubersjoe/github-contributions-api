@@ -61,7 +61,7 @@ app.get('/v4/:username', async (req: Request, res, next) => {
   }
 
   const query: ParsedQuery = {
-    years: years.map((y) => parseInt(y, 10)).filter(isFinite),
+    years: years.map((y) => parseInt(y)).filter(isFinite),
     fetchAll: years.includes('all') || years.length === 0,
     lastYear: years.includes('last'),
     format: req.query.format,
