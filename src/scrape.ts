@@ -37,9 +37,9 @@ export interface NestedResponse {
  * @throws Error
  * @throws UserNotFoundError
  */
-async function fetchYearLinks(username: string, query: ParsedQuery) {
-  const data = await fetch(`https://github.com/${username}`);
-  const $ = cheerio.load(await data.text());
+async function scrapeYearLinks(username: string, query: ParsedQuery) {
+  const page = await fetch(`https://github.com/${username}`);
+  const $ = cheerio.load(await page.text());
 
   const yearLinks = $('.js-year-link').get();
 
@@ -69,14 +69,14 @@ async function fetchYearLinks(username: string, query: ParsedQuery) {
 /**
  * @throws Error if scraping of GitHub profile fails
  */
-async function fetchContributionsForYear(
+async function scrapeContributionsForYear(
   year: Year,
   url: string,
   format?: 'nested',
 ): Promise<Response | NestedResponse> {
-  const data = await fetch(`https://github.com${url}`);
+  const page = await fetch(`https://github.com${url}`);
 
-  const $ = cheerio.load(await data.text());
+  const $ = cheerio.load(await page.text());
   const $days = $('.js-calendar-graph-table .ContributionCalendar-day');
 
   const sortedDays: Array<Element> = $days.get().sort((a, b) => {
@@ -167,18 +167,18 @@ async function fetchContributionsForYear(
 /**
  * @throws UserNotFoundError
  */
-export async function fetchContributionsForQuery(
+export async function scrapeGitHubContributions(
   username: string,
   query: ParsedQuery,
 ): Promise<Response | NestedResponse> {
-  const yearLinks = await fetchYearLinks(username, query);
+  const yearLinks = await scrapeYearLinks(username, query);
   const contributionsForYear = yearLinks.map((link) =>
-    fetchContributionsForYear(link.year, link.href, query.format),
+    scrapeContributionsForYear(link.year, link.href, query.format),
   );
 
   if (query.lastYear) {
     contributionsForYear.push(
-      fetchContributionsForYear('lastYear', `/${username}`, query.format),
+      scrapeContributionsForYear('lastYear', `/${username}`, query.format),
     );
   }
 

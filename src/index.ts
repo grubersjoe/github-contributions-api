@@ -4,11 +4,11 @@ import cors from 'cors';
 import compression from 'compression';
 
 import {
-  fetchContributionsForQuery,
+  scrapeGitHubContributions,
   NestedResponse as ApiNestedResponse,
   Response as ApiResponse,
   UserNotFoundError,
-} from './fetch';
+} from './scrape';
 
 export interface ParsedQuery {
   years: Array<number>;
@@ -75,7 +75,7 @@ app.get('/v4/:username', async (req: Request, res, next) => {
   }
 
   try {
-    const response = await fetchContributionsForQuery(username, query);
+    const response = await scrapeGitHubContributions(username, query);
     cache.put(key, response, 1000 * 3600); // Store for an hour
 
     return res.json(response);

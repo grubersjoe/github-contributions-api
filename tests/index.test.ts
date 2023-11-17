@@ -3,7 +3,7 @@ import { Server } from 'http';
 import cache from 'memory-cache';
 
 import app from '../src';
-import * as fetchService from '../src/fetch';
+import * as fetchService from '../src/scrape';
 
 import testData from './fixtures/grubersjoe-2018.json';
 import testDataMultipleYears from './fixtures/grubersjoe-2017-2018.json';
@@ -104,7 +104,7 @@ describe('The :username endpoint', () => {
   test('should respond 500 if an error is thrown', () => {
     const fetchContributionsMock = jest.spyOn(
       fetchService,
-      'fetchContributionsForQuery',
+      'scrapeGitHubContributions',
     );
 
     fetchContributionsMock.mockImplementation(() => {
