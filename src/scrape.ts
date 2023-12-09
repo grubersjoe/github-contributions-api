@@ -81,7 +81,7 @@ async function scrapeContributionsForYear(
   const $ = cheerio.load(await page.text());
   const $days = $('.js-calendar-graph-table .ContributionCalendar-day');
 
-  const sortedDays= $days.get().sort((a: TagElement, b: TagElement) => {
+  const sortedDays = $days.get().sort((a: TagElement, b: TagElement) => {
     const dateA = a.attribs['data-date'] ?? '';
     const dateB = b.attribs['data-date'] ?? '';
 
@@ -101,15 +101,15 @@ async function scrapeContributionsForYear(
 
   // Required for contribution count
   const tooltipsByDayId = $('.js-calendar-graph tool-tip')
-      .toArray()
-      .reduce<Record<string, Cheerio>>((map, elem) => {
-        const $elem = $(elem);
-        const dayId = $elem.attr('for');
-        if (dayId) {
-          map[dayId] = $elem
-        }
-        return map;
-      }, {});
+    .toArray()
+    .reduce<Record<string, Cheerio>>((map, elem) => {
+      const $elem = $(elem);
+      const dayId = $elem.attr('for');
+      if (dayId) {
+        map[dayId] = $elem;
+      }
+      return map;
+    }, {});
 
   const response = {
     total: {
@@ -134,17 +134,22 @@ async function scrapeContributionsForYear(
 
   return {
     ...response,
-    contributions: sortedDays.map((day) => parseDay(day, tooltipsByDayId).contribution, tooltipsByDayId),
+    contributions: sortedDays.map(
+      (day) => parseDay(day, tooltipsByDayId).contribution,
+      tooltipsByDayId,
+    ),
   };
 }
 
-const parseDay = (day: TagElement, tooltipsByDayId: Record<string, Cheerio>) => {
+const parseDay = (
+  day: TagElement,
+  tooltipsByDayId: Record<string, Cheerio>,
+) => {
   const attr = {
     id: day.attribs['id'],
     date: day.attribs['data-date'],
     level: day.attribs['data-level'],
   };
-
 
   if (!attr.date) {
     throw Error('Unable to parse date attribute.');

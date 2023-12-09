@@ -1,12 +1,12 @@
-import express from 'express';
+import express, { ErrorRequestHandler } from 'express';
 import cache from 'memory-cache';
 import cors from 'cors';
 import compression from 'compression';
 
 import {
-  scrapeGitHubContributions,
   NestedResponse as ApiNestedResponse,
   Response as ApiResponse,
+  scrapeGitHubContributions,
   UserNotFoundError,
 } from './scrape';
 
@@ -96,20 +96,14 @@ app.get('/v4/:username', async (req: Request, res, next) => {
   }
 });
 
-// Error handler
-// noinspection JSUnusedLocalSymbols `next` argument is required
-app.use(
-  (
-    err: Error,
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction,
-  ) => {
-    console.error(new Date().toUTCString(), err);
-    res.status(500).send({
-      error: err.message,
-    });
-  },
-);
+const errorHandler: ErrorRequestHandler = (error, _req, res, next) => {
+  res.status(error.statusCode ?? 500).json({
+    error: error.message,
+  });
+};
+
+// To override the default Express.js error handler this needs to be last!
+// The order of middleware does matter.
+app.use(errorHandler);
 
 export default app;
