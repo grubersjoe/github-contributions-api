@@ -2,7 +2,6 @@ import express, { ErrorRequestHandler } from 'express';
 import cache from 'memory-cache';
 import cors from 'cors';
 import compression from 'compression';
-import { HttpError } from 'http-errors';
 
 import {
   NestedResponse as ApiNestedResponse,
@@ -97,15 +96,12 @@ app.get('/v4/:username', async (req: Request, res, next) => {
   }
 });
 
-const errorHandler: ErrorRequestHandler = (
-  error: HttpError,
-  _req,
-  res,
-  next,
-) => {
-  res.status(error.statusCode ?? 500).json({
+const errorHandler: ErrorRequestHandler = (error, _req, res, next) => {
+  console.error(error);
+  res.status(500).json({
     error: error.message,
   });
+  next();
 };
 
 // To override the default Express.js error handler this needs to be last!
