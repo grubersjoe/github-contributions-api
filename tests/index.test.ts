@@ -70,7 +70,7 @@ describe('The :username endpoint', () => {
       .expect(404)
       .expect(({ body }) =>
         expect(body).toStrictEqual({
-          error: `User \'${nonExistingUser}\' not found`,
+          error: `User "${nonExistingUser}" not found.`,
         }),
       );
   });
