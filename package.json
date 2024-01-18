@@ -13,10 +13,12 @@
     "build": "rm -rf build/* && tsc",
     "dev": "nodemon src/server.ts --exec ts-node src/server.ts",
     "format": "prettier --write src tests",
+    "prepare": "husky install",
     "postinstall": "npm run build",
     "prestart": "npm run build",
     "start": "node build/server.js",
-    "test": "jest --silent"
+    "test": "jest --silent",
+    "typecheck": "tsc"
   },
   "repository": {
     "type": "git",
@@ -50,6 +52,7 @@
     "@types/memory-cache": "^0.2.3",
     "@types/node": "^20.10.4",
     "@types/supertest": "^2.0.12",
+    "husky": "^8.0.3",
     "jest": "^29.6.1",
     "nodemon": "^3.0.2",
     "prettier": "^3.1.1",
