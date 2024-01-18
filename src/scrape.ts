@@ -152,11 +152,11 @@ const parseDay = (
   };
 
   if (!attr.date) {
-    throw Error('Unable to parse date attribute.');
+    throw Error('Unable to parse contribution date attribute.');
   }
 
   if (!attr.level) {
-    throw Error('Unable to parse level attribute.');
+    throw Error('Unable to parse contribution level attribute.');
   }
 
   let count = 0;
@@ -236,6 +236,6 @@ export async function scrapeGitHubContributions(
 
 export class UserNotFoundError extends Error {
   constructor(username: string) {
-    super(`User '${username}' not found`);
+    super(`User "${username}" not found.`);
   }
 }
