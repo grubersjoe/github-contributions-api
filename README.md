@@ -130,7 +130,7 @@ https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?y=all # default
 
 ### Response interface
 
-The responses are formally structured like this:
+The responses are structured like this:
 
 ```typescript
 type Level = 0 | 1 | 2 | 3 | 4;
