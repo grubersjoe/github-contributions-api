@@ -133,12 +133,10 @@ https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?y=all # default
 The responses are structured like this:
 
 ```typescript
-type Level = 0 | 1 | 2 | 3 | 4;
-
 interface Contribution {
   date: string;
   count: number;
-  level: Level;
+  level: 0 | 1 | 2 | 3 | 4;
 }
 
 interface Response {
