@@ -40,7 +40,15 @@ export interface NestedResponse {
  * @throws UserNotFoundError
  */
 async function scrapeYearLinks(username: string, query: ParsedQuery) {
-  const page = await fetch(`https://github.com/${username}`);
+  const page = await fetch(
+    `https://github.com/${username}?action=show&controller=profiles&tab=contributions&user_id=${username}`,
+    {
+      headers: {
+        referer: 'https://github.com/' + username,
+        'x-requested-with': 'XMLHttpRequest',
+      },
+    },
+  );
   const $ = cheerio.load(await page.text());
 
   const yearLinks = $('.js-year-link').get();
@@ -74,9 +82,18 @@ async function scrapeYearLinks(username: string, query: ParsedQuery) {
 async function scrapeContributionsForYear(
   year: Year,
   url: string,
+  username: string,
   format?: 'nested',
 ): Promise<Response | NestedResponse> {
-  const page = await fetch(`https://github.com${url}`);
+  const page = await fetch(
+    `https://github.com${url}&action=show&controller=profiles&tab=contributions`,
+    {
+      headers: {
+        referer: 'https://github.com/' + username,
+        'x-requested-with': 'XMLHttpRequest',
+      },
+    },
+  );
 
   const $ = cheerio.load(await page.text());
   const $days = $('.js-calendar-graph-table .ContributionCalendar-day');
@@ -198,12 +215,17 @@ export async function scrapeGitHubContributions(
 ): Promise<Response | NestedResponse> {
   const yearLinks = await scrapeYearLinks(username, query);
   const contributionsForYear = yearLinks.map((link) =>
-    scrapeContributionsForYear(link.year, link.href, query.format),
+    scrapeContributionsForYear(link.year, link.href, username, query.format),
   );
 
   if (query.lastYear) {
     contributionsForYear.push(
-      scrapeContributionsForYear('lastYear', `/${username}`, query.format),
+      scrapeContributionsForYear(
+        'lastYear',
+        `/${username}`,
+        username,
+        query.format,
+      ),
     );
   }
 
