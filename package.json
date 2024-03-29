@@ -17,7 +17,7 @@
     "postinstall": "npm run build",
     "prestart": "npm run build",
     "start": "node build/server.js",
-    "test": "jest --silent",
+    "test": "jest",
     "typecheck": "tsc"
   },
   "repository": {
