@@ -1,8 +1,8 @@
 import cheerio from 'cheerio';
 
 import { ParsedQuery } from '.';
-import TagElement = cheerio.TagElement;
 import Cheerio = cheerio.Cheerio;
+import TagElement = cheerio.TagElement;
 
 type Level = 0 | 1 | 2 | 3 | 4;
 type Year = number | 'lastYear';
@@ -44,7 +44,7 @@ async function scrapeYearLinks(username: string, query: ParsedQuery) {
     `https://github.com/${username}?action=show&controller=profiles&tab=contributions&user_id=${username}`,
     {
       headers: {
-        referer: 'https://github.com/' + username,
+        referer: `https://github.com/${username}`,
         'x-requested-with': 'XMLHttpRequest',
       },
     },
@@ -58,19 +58,9 @@ async function scrapeYearLinks(username: string, query: ParsedQuery) {
   }
 
   return yearLinks
-    .map((a) => {
-      const $a = $(a);
-      const href = $a.attr('href');
-
-      if (!href) {
-        throw Error('Unable to parse year link.');
-      }
-
-      return {
-        year: parseInt($a.text().trim()),
-        href,
-      };
-    })
+    .map((a) => ({
+      year: parseInt($(a).text().trim()),
+    }))
     .filter((link) =>
       query.fetchAll ? true : query.years.includes(link.year),
     );
@@ -81,15 +71,17 @@ async function scrapeYearLinks(username: string, query: ParsedQuery) {
  */
 async function scrapeContributionsForYear(
   year: Year,
-  url: string,
   username: string,
   format?: 'nested',
 ): Promise<Response | NestedResponse> {
+  const url = `https://github.com/users/${username}/contributions`;
   const page = await fetch(
-    `https://github.com${url}&action=show&controller=profiles&tab=contributions`,
+    year === 'lastYear'
+      ? url
+      : url.concat(`?tab=overview&from=${year}-12-01&to=${year}-12-31`),
     {
       headers: {
-        referer: 'https://github.com/' + username,
+        referer: `https://github.com/${username}`,
         'x-requested-with': 'XMLHttpRequest',
       },
     },
@@ -215,17 +207,12 @@ export async function scrapeGitHubContributions(
 ): Promise<Response | NestedResponse> {
   const yearLinks = await scrapeYearLinks(username, query);
   const contributionsForYear = yearLinks.map((link) =>
-    scrapeContributionsForYear(link.year, link.href, username, query.format),
+    scrapeContributionsForYear(link.year, username, query.format),
   );
 
   if (query.lastYear) {
     contributionsForYear.push(
-      scrapeContributionsForYear(
-        'lastYear',
-        `/${username}`,
-        username,
-        query.format,
-      ),
+      scrapeContributionsForYear('lastYear', username, query.format),
     );
   }
 
