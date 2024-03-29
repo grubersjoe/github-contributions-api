@@ -1,13 +1,11 @@
-import request from 'supertest';
 import { Server } from 'http';
 import cache from 'memory-cache';
-
+import request from 'supertest';
 import app from '../src';
 import * as fetchService from '../src/scrape';
-
-import testData from './fixtures/grubersjoe-2018.json';
 import testDataMultipleYears from './fixtures/grubersjoe-2017-2018.json';
 import testDataNested from './fixtures/grubersjoe-2018-nested.json';
+import testData from './fixtures/grubersjoe-2018.json';
 
 const version = 'v4';
 const username = 'grubersjoe';
