@@ -2,8 +2,8 @@
 
 ![CI](https://github.com/grubersjoe/github-contributions-api/actions/workflows/test.yml/badge.svg)
 
-A simple API that returns number of GitHub contributions based on a users GitHub
-profile. This API is used by
+An API that returns the number of GitHub contributions by scraping a user's
+GitHub profile. This API is used by
 [React GitHub Calendar](https://github.com/grubersjoe/react-github-calendar)
 (React component).
 
@@ -30,7 +30,7 @@ Send a GET request to the API in the following format:
 https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME
 ```
 
-And you will receive an object with _complete_ history of that user's
+And you will receive an object with complete history of that user's
 contributions (total per year and for each day):
 
 ```json
@@ -93,7 +93,7 @@ https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?format=nested
 }
 ```
 
-### The `y` query parameter
+### Query specific time frame
 
 Use the `y` (year) query parameter to retrieve the data for a specific year, a
 set of years, the _last_ year (GitHub's default view), or the data for _all_
