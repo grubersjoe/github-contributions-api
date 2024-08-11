@@ -13,7 +13,7 @@
     "build": "rm -rf build/* && tsc",
     "dev": "nodemon src/server.ts --exec ts-node src/server.ts",
     "format": "prettier --write src tests",
-    "prepare": "husky install",
+    "prepare": "husky",
     "postinstall": "npm run build",
     "prestart": "npm run build",
     "start": "node build/server.js",
