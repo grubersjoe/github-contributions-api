@@ -1,7 +1,7 @@
-import type { Config } from 'jest';
+import type { Config } from 'jest'
 
 const config: Config = {
   silent: true,
-};
+}
 
-export default config;
+export default config

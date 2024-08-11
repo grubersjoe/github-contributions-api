@@ -134,30 +134,30 @@ The responses are structured like this:
 
 ```typescript
 interface Contribution {
-  date: string;
-  count: number;
-  level: 0 | 1 | 2 | 3 | 4;
+  date: string
+  count: number
+  level: 0 | 1 | 2 | 3 | 4
 }
 
 interface Response {
   total: {
-    [year: number]: number;
-    [year: string]: number; // 'lastYear'
-  };
-  contributions: Array<Contribution>;
+    [year: number]: number
+    [year: string]: number // 'lastYear'
+  }
+  contributions: Array<Contribution>
 }
 
 interface NestedResponse {
   total: {
-    [year: number]: number;
-    [year: string]: number; // 'lastYear;
-  };
+    [year: number]: number
+    [year: string]: number // 'lastYear;
+  }
   contributions: {
     [year: number]: {
       [month: number]: {
-        [day: number]: Contribution;
-      };
-    };
-  };
+        [day: number]: Contribution
+      }
+    }
+  }
 }
 ```
