@@ -1,8 +1,7 @@
-import cheerio from 'cheerio';
+import { fromURL } from 'cheerio';
 
+import { Element, isText } from 'domhandler';
 import { ParsedQuery } from '.';
-import Cheerio = cheerio.Cheerio;
-import TagElement = cheerio.TagElement;
 
 type Level = 0 | 1 | 2 | 3 | 4;
 type Year = number | 'lastYear';
@@ -35,35 +34,34 @@ export interface NestedResponse {
   };
 }
 
+const requestOptions = (username: string) =>
+  ({
+    method: 'GET',
+    headers: {
+      referer: `https://github.com/${username}`,
+      'x-requested-with': 'XMLHttpRequest',
+    },
+  }) as const;
+
 /**
- * @throws Error
  * @throws UserNotFoundError
  */
 async function scrapeYearLinks(username: string, query: ParsedQuery) {
-  const page = await fetch(
-    `https://github.com/${username}?action=show&controller=profiles&tab=contributions&user_id=${username}`,
-    {
-      headers: {
-        referer: `https://github.com/${username}`,
-        'x-requested-with': 'XMLHttpRequest',
-      },
-    },
-  );
-  const $ = cheerio.load(await page.text());
+  try {
+    const url = `https://github.com/${username}?action=show&controller=profiles&tab=contributions&user_id=${username}`;
+    const $ = await fromURL(url, { requestOptions: requestOptions(username) });
 
-  const yearLinks = $('.js-year-link').get();
-
-  if (yearLinks.length === 0) {
+    return $('.js-year-link')
+      .get()
+      .map((a) => ({
+        year: parseInt($(a).text().trim()),
+      }))
+      .filter((link) =>
+        query.fetchAll ? true : query.years.includes(link.year),
+      );
+  } catch (error) {
     throw new UserNotFoundError(username);
   }
-
-  return yearLinks
-    .map((a) => ({
-      year: parseInt($(a).text().trim()),
-    }))
-    .filter((link) =>
-      query.fetchAll ? true : query.years.includes(link.year),
-    );
 }
 
 /**
@@ -74,23 +72,15 @@ async function scrapeContributionsForYear(
   username: string,
   format?: 'nested',
 ): Promise<Response | NestedResponse> {
-  const url = `https://github.com/users/${username}/contributions`;
-  const page = await fetch(
+  const url =
     year === 'lastYear'
-      ? url
-      : url.concat(`?tab=overview&from=${year}-12-01&to=${year}-12-31`),
-    {
-      headers: {
-        referer: `https://github.com/${username}`,
-        'x-requested-with': 'XMLHttpRequest',
-      },
-    },
-  );
+      ? `https://github.com/users/${username}/contributions`
+      : `https://github.com/users/${username}/contributions?tab=overview&from=${year}-12-01&to=${year}-12-31`;
 
-  const $ = cheerio.load(await page.text());
-  const $days = $('.js-calendar-graph-table .ContributionCalendar-day');
+  const $ = await fromURL(url, { requestOptions: requestOptions(username) });
 
-  const sortedDays = $days.get().sort((a: TagElement, b: TagElement) => {
+  const days = $('.js-calendar-graph-table .ContributionCalendar-day');
+  const sortedDays = days.get().sort((a, b) => {
     const dateA = a.attribs['data-date'] ?? '';
     const dateB = b.attribs['data-date'] ?? '';
 
@@ -111,12 +101,8 @@ async function scrapeContributionsForYear(
   // Required for contribution count
   const tooltipsByDayId = $('.js-calendar-graph tool-tip')
     .toArray()
-    .reduce<Record<string, Cheerio>>((map, elem) => {
-      const $elem = $(elem);
-      const dayId = $elem.attr('for');
-      if (dayId) {
-        map[dayId] = $elem;
-      }
+    .reduce<Record<string, Element>>((map, elem) => {
+      map[elem.attribs['for']] = elem;
       return map;
     }, {});
 
@@ -150,10 +136,7 @@ async function scrapeContributionsForYear(
   };
 }
 
-const parseDay = (
-  day: TagElement,
-  tooltipsByDayId: Record<string, Cheerio>,
-) => {
+const parseDay = (day: Element, tooltipsByDayId: Record<string, Element>) => {
   const attr = {
     id: day.attribs['id'],
     date: day.attribs['data-date'],
@@ -170,9 +153,12 @@ const parseDay = (
 
   let count = 0;
   if (tooltipsByDayId[attr.id]) {
-    const countMatch = tooltipsByDayId[attr.id].text().trim().match(/^\d+/);
-    if (countMatch) {
-      count = parseInt(countMatch[0]);
+    const text = tooltipsByDayId[attr.id].firstChild;
+    if (text && isText(text)) {
+      const countMatch = text.data.trim().match(/^\d+/);
+      if (countMatch) {
+        count = parseInt(countMatch[0]);
+      }
     }
   }
 
@@ -193,7 +179,7 @@ const parseDay = (
   } satisfies Contribution;
 
   return {
-    date: attr.date.split('-').map((d) => parseInt(d)),
+    date: attr.date.split('-').map((d: string) => parseInt(d)),
     contribution,
   };
 };

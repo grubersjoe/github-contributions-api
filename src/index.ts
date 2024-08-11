@@ -104,7 +104,7 @@ const errorHandler: ErrorRequestHandler = (error, _req, res, next) => {
   next();
 };
 
-// To override the default Express.js error handler this needs to be last!
+// This needs to be last to override the default Express.js error handler!
 // The order of middleware does matter.
 app.use(errorHandler);
 
