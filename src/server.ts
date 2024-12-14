@@ -1,4 +1,8 @@
-import app from './index'
+import consoleStamp from 'console-stamp'
+import app from './app'
+
+// Globally wrap the console to add timestamps to every call.
+consoleStamp(console, { format: ':date(isoDateTime)' })
 
 const server = app.listen(process.env.PORT ?? 8080, () =>
   console.log(

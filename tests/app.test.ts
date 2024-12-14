@@ -1,7 +1,7 @@
 import { Server } from 'http'
 import cache from 'memory-cache'
 import request from 'supertest'
-import app from '../src'
+import app from '../src/app'
 import * as fetchService from '../src/scrape'
 import testDataMultipleYears from './fixtures/grubersjoe-2017-2018.json'
 import testDataNested from './fixtures/grubersjoe-2018-nested.json'
@@ -114,7 +114,7 @@ describe('The :username endpoint', () => {
       .expect(500)
       .expect((res) =>
         expect(res.body).toStrictEqual({
-          error: `Error scraping contribution data of '${username}': unexpected error`,
+          error: `Failed scraping contribution data of '${username}': unexpected error`,
         }),
       )
   })

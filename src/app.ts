@@ -1,8 +1,7 @@
+import compression from 'compression'
+import cors from 'cors'
 import express, { ErrorRequestHandler } from 'express'
 import cache from 'memory-cache'
-import cors from 'cors'
-import compression from 'compression'
-
 import {
   NestedResponse as ApiNestedResponse,
   Response as ApiResponse,
@@ -88,7 +87,7 @@ app.get('/v4/:username', async (req: Request, res, next) => {
 
     next(
       new Error(
-        `Error scraping contribution data of '${username}': ${
+        `Failed scraping contribution data of '${username}': ${
           error instanceof Error ? error.message : 'Unknown error.'
         }`,
       ),

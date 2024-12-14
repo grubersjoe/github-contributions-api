@@ -14,6 +14,9 @@ importers:
       compression:
         specifier: ^1.7.4
         version: 1.7.4
+      console-stamp:
+        specifier: ^3.1.2
+        version: 3.1.2
       cors:
         specifier: ^2.8.4
         version: 2.8.5
@@ -1189,6 +1192,10 @@ packages:
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
+  console-stamp@3.1.2:
+    resolution: {integrity: sha512-ab66x3NxOTxPuq71dI6gXEiw2X6ql4Le5gZz0bm7FW3FSCB00eztra/oQUuCoCGlsyKOxtULnHwphzMrRtzMBg==}
+    engines: {node: '>=12'}
+
   content-disposition@0.5.4:
     resolution: {integrity: sha512-FveZTNuGw04cxlAiWbzi6zTAL/lhehaWbTtgluJh4/E95DqMwTmha3KZN1aAWA8cFIhHzMZUvLevkw5Rqk+tSQ==}
     engines: {node: '>= 0.6'}
@@ -1235,6 +1242,9 @@ packages:
   css-what@6.1.0:
     resolution: {integrity: sha512-HTUrgRJ7r4dsZKU6GjmpfRK1O76h97Z8MfS1G0FozR+oF2kG6Vfe8JE6zwrkbxigziPHinCJ+gCPjA9EaBDtRw==}
     engines: {node: '>= 6'}
+
+  dateformat@4.6.3:
+    resolution: {integrity: sha512-2P0p0pFGzHS5EMnhdxQi7aJN+iMheud0UhG4dlE1DLAlvL8JHjJJTX/CSm4JXwV0Ka5nGk3zC5mcb5bUQUxxMA==}
 
   debug@2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
@@ -3854,6 +3864,11 @@ snapshots:
 
   concat-map@0.0.1: {}
 
+  console-stamp@3.1.2:
+    dependencies:
+      chalk: 4.1.2
+      dateformat: 4.6.3
+
   content-disposition@0.5.4:
     dependencies:
       safe-buffer: 5.2.1
@@ -3909,6 +3924,8 @@ snapshots:
       nth-check: 2.1.1
 
   css-what@6.1.0: {}
+
+  dateformat@4.6.3: {}
 
   debug@2.6.9:
     dependencies:

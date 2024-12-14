@@ -1,7 +1,7 @@
 import { fromURL } from 'cheerio'
 
 import { Element, isText } from 'domhandler'
-import { ParsedQuery } from '.'
+import { ParsedQuery } from './app'
 
 type Level = 0 | 1 | 2 | 3 | 4
 type Year = number | 'lastYear'
