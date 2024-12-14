@@ -18,7 +18,7 @@
     "prestart": "npm run build",
     "start": "node build/server.js",
     "test": "jest",
-    "typecheck": "tsc"
+    "typecheck": "tsc --noEmit"
   },
   "repository": {
     "type": "git",
