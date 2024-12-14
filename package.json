@@ -1,7 +1,7 @@
 {
   "name": "github-contribution-api",
   "description": "Scrape contribution data of a Github user",
-  "version": "4.7.3",
+  "version": "4.7.4",
   "author": "Jonathan Gruber <gruberjonathan@gmail.com>",
   "license": "MIT",
   "private": true,
@@ -40,8 +40,7 @@
     "cors": "^2.8.4",
     "domhandler": "^5.0.3",
     "express": "^4.21.1",
-    "memory-cache": "^0.2.0",
-    "rotating-file-stream": "^3.2.5"
+    "memory-cache": "^0.2.0"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.26.0",
