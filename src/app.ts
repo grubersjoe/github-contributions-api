@@ -41,9 +41,10 @@ app.get('/v4/:username', async (req: Request, res, next) => {
   const { username } = req.params
 
   if (req.query.format && req.query.format !== 'nested') {
-    return res.status(400).send({
+    res.status(400).send({
       error: "Query parameter 'format' must be 'nested' or undefined",
     })
+    return
   }
 
   const years =
@@ -54,9 +55,10 @@ app.get('/v4/:username', async (req: Request, res, next) => {
       : []
 
   if (years.some((y) => !/^\d+$/.test(y) && y !== 'all' && y !== 'last')) {
-    return res.status(400).send({
+    res.status(400).send({
       error: "Query parameter 'y' must be an integer, 'all' or 'last'",
     })
+    return
   }
 
   const query: ParsedQuery = {
@@ -70,19 +72,21 @@ app.get('/v4/:username', async (req: Request, res, next) => {
   const cached = cache.get(key)
 
   if (cached !== null) {
-    return res.json(cached)
+    res.json(cached)
+    return
   }
 
   try {
     const response = await scrapeGitHubContributions(username, query)
     cache.put(key, response, 1000 * 3600) // Store for an hour
 
-    return res.json(response)
+    res.json(response)
   } catch (error) {
     if (error instanceof UserNotFoundError) {
-      return res.status(404).send({
+      res.status(404).send({
         error: error.message,
       })
+      return
     }
 
     next(
@@ -103,8 +107,8 @@ const errorHandler: ErrorRequestHandler = (error, _req, res, next) => {
   next()
 }
 
-// This needs to be last to override the default Express.js error handler!
-// The order of middleware does matter.
+// This needs to be last to override the default Express.js error handler.
+// The order of middleware matters.
 app.use(errorHandler)
 
 export default app

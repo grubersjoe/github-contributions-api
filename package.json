@@ -1,7 +1,7 @@
 {
   "name": "github-contribution-api",
   "description": "Scrape contribution data of a Github user",
-  "version": "4.7.4",
+  "version": "4.7.5",
   "author": "Jonathan Gruber <gruberjonathan@gmail.com>",
   "license": "MIT",
   "private": true,
@@ -27,12 +27,7 @@
   "bugs": {
     "url": "git+https://github.com/grubersjoe/github-contributions-api.git"
   },
-  "keywords": [
-    "github",
-    "contributions",
-    "api",
-    "node"
-  ],
+  "keywords": ["github", "contributions", "api", "node"],
   "dependencies": {
     "cheerio": "^1.1.0",
     "compression": "^1.8.0",
