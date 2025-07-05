@@ -1,7 +1,6 @@
 import { fromURL } from 'cheerio'
 
 import { Element, isText } from 'domhandler'
-import { ParsedQuery } from './app'
 
 type Level = 0 | 1 | 2 | 3 | 4
 type Year = number | 'lastYear'
@@ -32,6 +31,13 @@ export interface NestedResponse {
       }
     }
   }
+}
+
+export interface ParsedQuery {
+  years: Array<number>
+  fetchAll: boolean
+  lastYear: boolean
+  format?: 'nested'
 }
 
 const requestOptions = (username: string) =>

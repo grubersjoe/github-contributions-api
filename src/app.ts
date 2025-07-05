@@ -1,35 +1,26 @@
 import compression from 'compression'
 import cors from 'cors'
+import { cache, cacheTTL, age } from './cache'
+
 import express, { ErrorRequestHandler } from 'express'
-import cache from 'memory-cache'
 import {
   NestedResponse as ApiNestedResponse,
   Response as ApiResponse,
   scrapeGitHubContributions,
   UserNotFoundError,
+  ParsedQuery,
 } from './scrape'
 
-export interface ParsedQuery {
-  years: Array<number>
-  fetchAll: boolean
-  lastYear: boolean
-  format: QueryParams['format']
-}
-
-interface Params {
-  username: string
-}
-
-interface QueryParams {
+interface ReqQuery {
   y?: string | Array<string>
   format?: 'nested'
 }
 
 type Request = express.Request<
-  Params,
+  { username: string },
   ApiResponse | ApiNestedResponse | { error: string },
   {},
-  QueryParams
+  ReqQuery
 >
 
 const app = express()
@@ -61,25 +52,28 @@ app.get('/v4/:username', async (req: Request, res, next) => {
     return
   }
 
-  const query: ParsedQuery = {
+  const query = {
     years: years.map((y) => parseInt(y)).filter(isFinite),
     fetchAll: years.includes('all') || years.length === 0,
     lastYear: years.includes('last'),
     format: req.query.format,
-  }
+  } satisfies ParsedQuery
 
-  const key = `${username}-${JSON.stringify(query)}`
-  const cached = cache.get(key)
+  const cacheKey = `${username}-${JSON.stringify(query)}`
+  const cached = cache.get(cacheKey)
 
   if (cached !== null) {
-    res.json(cached)
+    res.setHeader('age', age(cached))
+    res.setHeader('x-cache', 'HIT')
+    res.json(cached.response)
     return
   }
 
   try {
     const response = await scrapeGitHubContributions(username, query)
-    cache.put(key, response, 1000 * 3600) // Store for an hour
-
+    cache.put(cacheKey, { ts: Date.now(), response: response }, cacheTTL)
+    res.setHeader('age', 0)
+    res.setHeader('x-cache', 'MISS')
     res.json(response)
   } catch (error) {
     if (error instanceof UserNotFoundError) {
@@ -107,7 +101,7 @@ const errorHandler: ErrorRequestHandler = (error, _req, res, next) => {
   next()
 }
 
-// This needs to be last to override the default Express.js error handler.
+// This needs to come last to override the default Express.js error handler.
 // The order of middleware matters.
 app.use(errorHandler)
 
