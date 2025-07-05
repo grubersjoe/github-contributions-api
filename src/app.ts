@@ -33,7 +33,7 @@ app.use(compression())
 app.get('/', (_, res) => {
   res.json({
     message: 'Welcome to the GitHub Contributions API.',
-    version: `${version}`,
+    version,
     docs: 'https://github.com/grubersjoe/github-contributions-api',
   })
 })
@@ -86,7 +86,7 @@ app.get(`/${version}/:username`, async (req: Request, res, next) => {
 
   try {
     const response = await scrapeGitHubContributions(username, query)
-    cache.put(cacheKey, { ts: Date.now(), response: response }, cacheTTL)
+    cache.put(cacheKey, { ts: Date.now(), response }, cacheTTL)
     res.setHeader('age', 0)
     res.setHeader('x-cache', 'MISS')
     res.json(response)
