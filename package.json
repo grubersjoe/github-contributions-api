@@ -27,7 +27,12 @@
   "bugs": {
     "url": "git+https://github.com/grubersjoe/github-contributions-api.git"
   },
-  "keywords": ["github", "contributions", "api", "node"],
+  "keywords": [
+    "github",
+    "contributions",
+    "calendar",
+    "node"
+  ],
   "dependencies": {
     "cheerio": "^1.1.0",
     "compression": "^1.8.0",

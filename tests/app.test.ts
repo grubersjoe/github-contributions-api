@@ -18,6 +18,7 @@ describe('The :username endpoint', () => {
   })
 
   afterEach((done) => {
+    jest.restoreAllMocks()
     cache.clear()
     server.close(done)
   })
@@ -105,7 +106,27 @@ describe('The :username endpoint', () => {
         ),
   )
 
-  test('sets cache headers', async () => {
+  test('returns 500 for errors', () => {
+    const fetchContributionsMock = jest.spyOn(
+      fetchService,
+      'scrapeGitHubContributions',
+    )
+
+    fetchContributionsMock.mockImplementation(() => {
+      throw new Error('unexpected error')
+    })
+
+    return request(app)
+      .get(`/${version}/${username}`)
+      .expect(500)
+      .expect(({ body }) =>
+        expect(body).toStrictEqual({
+          error: `Failed scraping contribution data of '${username}': unexpected error`,
+        }),
+      )
+  })
+
+  test('caches responses', async () => {
     jest.setTimeout(10 * 1000)
 
     return request(app)
@@ -127,23 +148,20 @@ describe('The :username endpoint', () => {
       )
   })
 
-  test('returns 500 for errors', () => {
-    const fetchContributionsMock = jest.spyOn(
-      fetchService,
-      'scrapeGitHubContributions',
-    )
-
-    fetchContributionsMock.mockImplementation(() => {
-      throw new Error('unexpected error')
-    })
+  test('ignores cache for cache-control: no-cache', async () => {
+    jest.setTimeout(10 * 1000)
 
     return request(app)
       .get(`/${version}/${username}`)
-      .expect(500)
-      .expect(({ body }) =>
-        expect(body).toStrictEqual({
-          error: `Failed scraping contribution data of '${username}': unexpected error`,
-        }),
+      .expect(200)
+      .expect(({ headers }) => expect(headers['x-cache']).toBe('MISS'))
+      .then(() => new Promise((resolve) => setTimeout(resolve, 1000)))
+      .then(() =>
+        request(app)
+          .get(`/${version}/${username}`)
+          .set('cache-control', 'no-cache')
+          .expect(200)
+          .expect(({ headers }) => expect(headers['x-cache']).toBe('MISS')),
       )
   })
 })

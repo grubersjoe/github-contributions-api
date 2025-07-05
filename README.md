@@ -30,8 +30,7 @@ Send a GET request to the API in the following format:
 https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME
 ```
 
-And you will receive an object with complete history of that user's
-contributions (total per year and for each day):
+And you will receive the complete GitHub contribution history of that user (total per year and for each day):
 
 ```json
 {
@@ -60,7 +59,7 @@ contributions (total per year and for each day):
 }
 ```
 
-You can return the results as an object keyed by year, month and day by using
+You can also request the data as an object keyed by year, month and day by using
 the `format=nested` query parameter:
 
 ```shell
@@ -93,10 +92,10 @@ https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?format=nested
 }
 ```
 
-### Query specific time frame
+### Time selection
 
-Use the `y` (year) query parameter to retrieve the data for a specific year, a
-set of years, the _last_ year (GitHub's default view), or the data for _all_
+Use the `y` query parameter to retrieve the data for a specific year, a
+set of years, the last year (GitHub's default view), or the data for all
 years (default when `y` parameter is omitted):
 
 ```shell

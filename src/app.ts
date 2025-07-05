@@ -60,13 +60,16 @@ app.get('/v4/:username', async (req: Request, res, next) => {
   } satisfies ParsedQuery
 
   const cacheKey = `${username}-${JSON.stringify(query)}`
-  const cached = cache.get(cacheKey)
 
-  if (cached !== null) {
-    res.setHeader('age', age(cached))
-    res.setHeader('x-cache', 'HIT')
-    res.json(cached.response)
-    return
+  if (req.header('cache-control') !== 'no-cache') {
+    const cached = cache.get(cacheKey)
+
+    if (cached !== null) {
+      res.setHeader('age', age(cached))
+      res.setHeader('x-cache', 'HIT')
+      res.json(cached.response)
+      return
+    }
   }
 
   try {
