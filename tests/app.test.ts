@@ -1,13 +1,12 @@
 import { Server } from 'http'
 import request from 'supertest'
-import app from '../src/app'
+import app, { version } from '../src/app'
 import * as fetchService from '../src/scrape'
 import testDataMultipleYears from './fixtures/grubersjoe-2017-2018.json'
 import testDataNested from './fixtures/grubersjoe-2018-nested.json'
 import testData from './fixtures/grubersjoe-2018.json'
 import { cache } from '../src/cache'
 
-const version = 'v4'
 const username = 'grubersjoe'
 
 describe('The :username endpoint', () => {

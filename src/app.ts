@@ -23,12 +23,24 @@ type Request = express.Request<
   ReqQuery
 >
 
+export const version = 'v4'
+
 const app = express()
 
 app.use(cors())
 app.use(compression())
 
-app.get('/v4/:username', async (req: Request, res, next) => {
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Welcome to the GitHub Contributions API.',
+    version: `${version}`,
+    docs: 'https://github.com/grubersjoe/github-contributions-api',
+  })
+})
+
+app.get(`/${version}`, (req, res) => res.redirect('/'))
+
+app.get(`/${version}/:username`, async (req: Request, res, next) => {
   const { username } = req.params
 
   if (req.query.format && req.query.format !== 'nested') {
