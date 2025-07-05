@@ -22,7 +22,13 @@ describe('The :username endpoint', () => {
     server.close(done)
   })
 
-  test('should return correct data for specific year', () =>
+  test('should return data for empty query', () =>
+    request(app)
+      .get(`/${version}/${username}`)
+      .expect(200)
+      .expect(({ body }) => expect(body.contributions).not.toHaveLength(0)))
+
+  test('should return correct data for year', () =>
     request(app)
       .get(`/${version}/${username}?y=2018`)
       .expect(200)
@@ -43,7 +49,7 @@ describe('The :username endpoint', () => {
         expect(typeof body.total.lastYear).toBe('number')
       }))
 
-  test('should return correct data for specific year in nested format', () =>
+  test('should return correct data for year in nested format', () =>
     request(app)
       .get(`/${version}/${username}?y=2018&format=nested`)
       .expect(200)
@@ -74,7 +80,7 @@ describe('The :username endpoint', () => {
   })
 
   test.each([[`y=invalid`], [`y=2020abc`], [`y=abc2020`], [`y=`]])(
-    'should respond 400 for invalid y query parameter %s',
+    'should respond 400 for invalid y query %s',
     (y) =>
       request(app)
         .get(`/${version}/${username}?${y}`)
@@ -87,7 +93,7 @@ describe('The :username endpoint', () => {
   )
 
   test.each([[`format=invalid`], [`format=`]])(
-    'should respond 400 for invalid format query parameter %s',
+    'should respond 400 for invalid format query %s',
     () =>
       request(app)
         .get(`/${version}/${username}?format=invalid`)
@@ -99,7 +105,7 @@ describe('The :username endpoint', () => {
         ),
   )
 
-  test('should respond 500 if an error is thrown', () => {
+  test('should respond 500 for errors', () => {
     const fetchContributionsMock = jest.spyOn(
       fetchService,
       'scrapeGitHubContributions',
