@@ -1,12 +1,9 @@
 import memoryCache from 'memory-cache'
-import {
-  Response as ApiResponse,
-  NestedResponse as ApiNestedResponse,
-} from './scrape'
+import { Response, NestedResponse } from './scrape'
 
 type CacheItem = {
   ts: number // UNIX timestamp in ms
-  response: ApiResponse | ApiNestedResponse
+  response: Response | NestedResponse
 }
 
 export const cache = new memoryCache.Cache<string, CacheItem>()

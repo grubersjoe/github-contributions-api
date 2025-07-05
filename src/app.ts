@@ -4,8 +4,8 @@ import { cache, cacheTTL, age } from './cache'
 
 import express, { ErrorRequestHandler } from 'express'
 import {
-  NestedResponse as ApiNestedResponse,
-  Response as ApiResponse,
+  NestedResponse,
+  Response,
   scrapeGitHubContributions,
   UserNotFoundError,
   ParsedQuery,
@@ -18,7 +18,7 @@ interface ReqQuery {
 
 type Request = express.Request<
   { username: string },
-  ApiResponse | ApiNestedResponse | { error: string },
+  Response | NestedResponse | { error: string },
   {},
   ReqQuery
 >
@@ -30,7 +30,7 @@ const app = express()
 app.use(cors())
 app.use(compression())
 
-app.get('/', (req, res) => {
+app.get('/', (_, res) => {
   res.json({
     message: 'Welcome to the GitHub Contributions API.',
     version: `${version}`,
@@ -38,7 +38,7 @@ app.get('/', (req, res) => {
   })
 })
 
-app.get(`/${version}`, (req, res) => res.redirect('/'))
+app.get(`/${version}`, (_, res) => res.redirect('/'))
 
 app.get(`/${version}/:username`, async (req: Request, res, next) => {
   const { username } = req.params
