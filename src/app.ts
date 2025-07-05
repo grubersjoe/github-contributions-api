@@ -1,6 +1,6 @@
 import compression from 'compression'
 import cors from 'cors'
-import { cache, cacheTTL, age } from './cache'
+import { cache, cacheTTL, ageInSeconds } from './cache'
 
 import express, { ErrorRequestHandler } from 'express'
 import {
@@ -77,7 +77,7 @@ app.get(`/${version}/:username`, async (req: Request, res, next) => {
     const cached = cache.get(cacheKey)
 
     if (cached !== null) {
-      res.setHeader('age', age(cached))
+      res.setHeader('age', ageInSeconds(cached))
       res.setHeader('x-cache', 'HIT')
       res.json(cached.response)
       return
