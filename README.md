@@ -1,6 +1,7 @@
 # GitHub Contributions API v4
 
-![CI](https://github.com/grubersjoe/github-contributions-api/actions/workflows/test.yml/badge.svg)
+[![CI](https://github.com/grubersjoe/github-contributions-api/actions/workflows/test.yml/badge.svg)](https://github.com/grubersjoe/github-contributions-api/actions/workflows/test.yml)
+
 
 An API that returns the number of GitHub contributions by scraping a user's
 GitHub profile. This API is used by
