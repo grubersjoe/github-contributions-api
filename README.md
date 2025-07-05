@@ -164,6 +164,6 @@ interface NestedResponse {
 
 ### Caching
 
-Results are cached for one hour. The API returns the [`age`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Age) and the non-standard `x-cache` headers to provide more information about when the data was last scraped and if the cache was hit.
+Results are cached for one hour. The API returns the [`age`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Age) and the non-standard `x-cache: HIT | MISS` headers to provide more information about when the data was last scraped and if the cache was hit.
 
 You can enforce fresh data using the `cache-control: no-cache` header in the request, but please use this responsibly and not per default for every request.
