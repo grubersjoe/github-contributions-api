@@ -1,5 +1,5 @@
 {
-  "total": { "2017": 595, "2018": 992 },
+  "total": { "2017": 593, "2018": 992 },
   "contributions": [
     { "date": "2018-01-01", "count": 0, "level": 0 },
     { "date": "2018-01-02", "count": 1, "level": 1 },
@@ -425,7 +425,7 @@
     { "date": "2017-02-26", "count": 0, "level": 0 },
     { "date": "2017-02-27", "count": 1, "level": 1 },
     { "date": "2017-02-28", "count": 3, "level": 1 },
-    { "date": "2017-03-01", "count": 2, "level": 1 },
+    { "date": "2017-03-01", "count": 0, "level": 0 },
     { "date": "2017-03-02", "count": 6, "level": 2 },
     { "date": "2017-03-03", "count": 8, "level": 2 },
     { "date": "2017-03-04", "count": 0, "level": 0 },
