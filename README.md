@@ -2,11 +2,14 @@
 
 [![CI](https://github.com/grubersjoe/github-contributions-api/actions/workflows/test.yml/badge.svg)](https://github.com/grubersjoe/github-contributions-api/actions/workflows/test.yml)
 
-
 An API that returns the number of GitHub contributions by scraping a user's
 GitHub profile. This API is used by
 [React GitHub Calendar](https://github.com/grubersjoe/react-github-calendar)
 (React component).
+
+<a href="https://www.buymeacoffee.com/grubersjoe">
+  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 48px;" >
+</a>
 
 :warning: Results are cached for one hour!
 
