@@ -34,8 +34,8 @@
     "node"
   ],
   "dependencies": {
-    "cheerio": "^1.1.0",
-    "compression": "^1.8.0",
+    "cheerio": "^1.1.2",
+    "compression": "^1.8.1",
     "console-stamp": "^3.1.2",
     "cors": "^2.8.4",
     "domhandler": "^5.0.3",
@@ -43,22 +43,22 @@
     "memory-cache": "^0.2.0"
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.28.0",
+    "@babel/preset-env": "^7.28.3",
     "@babel/preset-typescript": "^7.27.1",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/jest": "^30.0.0",
     "@types/memory-cache": "^0.2.6",
-    "@types/node": "^24.0.10",
+    "@types/node": "^24.7.0",
     "@types/supertest": "^6.0.3",
     "husky": "^9.1.7",
-    "jest": "^30.0.4",
+    "jest": "^30.2.0",
     "nodemon": "^3.1.10",
     "prettier": "^3.6.2",
-    "supertest": "^7.1.1",
+    "supertest": "^7.1.4",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.3"
   },
   "prettier": {
     "semi": false,
