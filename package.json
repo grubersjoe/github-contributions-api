@@ -43,14 +43,14 @@
     "memory-cache": "^0.2.0"
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.28.3",
-    "@babel/preset-typescript": "^7.27.1",
+    "@babel/preset-env": "^7.28.5",
+    "@babel/preset-typescript": "^7.28.5",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3",
+    "@types/express": "^5.0.4",
     "@types/jest": "^30.0.0",
     "@types/memory-cache": "^0.2.6",
-    "@types/node": "^24.8.1",
+    "@types/node": "^24.9.1",
     "@types/supertest": "^6.0.3",
     "husky": "^9.1.7",
     "jest": "^30.2.0",
