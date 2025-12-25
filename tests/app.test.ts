@@ -1,11 +1,11 @@
 import { Server } from 'http'
 import request from 'supertest'
-import app, { version } from '../src/app'
-import * as fetchService from '../src/scrape'
+import { app, version } from '../src/app'
+import { cache } from '../src/cache'
+import * as github from '../src/github'
 import testDataMultipleYears from './fixtures/grubersjoe-2017-2018.json'
 import testDataNested from './fixtures/grubersjoe-2018-nested.json'
 import testData from './fixtures/grubersjoe-2018.json'
-import { cache } from '../src/cache'
 
 const username = 'grubersjoe'
 
@@ -19,14 +19,23 @@ describe('The :username endpoint', () => {
   afterEach((done) => {
     jest.restoreAllMocks()
     cache.clear()
+    server.closeAllConnections()
     server.close(done)
   })
 
-  test('returns data for empty query', () =>
+  test.each([[''], ['y=all']])('returns all data for query %s', (y) =>
     request(app)
-      .get(`/${version}/${username}`)
+      .get(`/${version}/${username}?${y}`)
       .expect(200)
-      .expect(({ body }) => expect(body.contributions).not.toHaveLength(0)))
+      .expect(({ body }) => {
+        expect(Object.keys(body.total).length).toBeGreaterThanOrEqual(14)
+
+        for (const count of Object.values(body.total)) {
+          expect(typeof count).toBe('number')
+        }
+      })
+      .timeout(8 * 1000),
+  )
 
   test('returns data for a single year', () =>
     request(app)
@@ -79,7 +88,7 @@ describe('The :username endpoint', () => {
       )
   })
 
-  test.each([[`y=invalid`], [`y=2020abc`], [`y=abc2020`], [`y=`]])(
+  test.each([['y='], ['y=invalid'], ['y=2020abc'], ['y=abc2020']])(
     'returns 400 for invalid y query %s',
     (y) =>
       request(app)
@@ -87,12 +96,12 @@ describe('The :username endpoint', () => {
         .expect(400)
         .expect(({ body }) =>
           expect(body).toStrictEqual({
-            error: "Query parameter 'y' must be an integer, 'all' or 'last'",
+            error: `y: Invalid string: must match pattern /^\\d+$/.`,
           }),
         ),
   )
 
-  test.each([[`format=invalid`], [`format=`]])(
+  test.each([['format=invalid'], ['format=']])(
     'returns 400 for invalid format query %s',
     () =>
       request(app)
@@ -100,18 +109,25 @@ describe('The :username endpoint', () => {
         .expect(400)
         .expect(({ body }) =>
           expect(body).toStrictEqual({
-            error: "Query parameter 'format' must be 'nested' or undefined",
+            error: `format: Invalid input: expected "nested".`,
           }),
         ),
   )
 
-  test('returns 500 for errors', () => {
-    const fetchContributionsMock = jest.spyOn(
-      fetchService,
-      'scrapeGitHubContributions',
-    )
+  test('combines all validation errors', () =>
+    request(app)
+      .get(`/${version}/${username}?y=invalid&format=invalid`)
+      .expect(400)
+      .expect(({ body }) =>
+        expect(body).toStrictEqual({
+          error: `y: Invalid string: must match pattern /^\\d+$/. format: Invalid input: expected "nested".`,
+        }),
+      ))
 
-    fetchContributionsMock.mockImplementation(() => {
+  test('returns 500 for errors', () => {
+    const scrapeContributionsMock = jest.spyOn(github, 'scrapeContributions')
+
+    scrapeContributionsMock.mockImplementation(() => {
       throw new Error('unexpected error')
     })
 

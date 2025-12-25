@@ -1,5 +1,5 @@
 import consoleStamp from 'console-stamp'
-import app from './app'
+import { app } from './app'
 
 // Globally wrap the console to add timestamps to every call.
 consoleStamp(console, { format: ':date(isoDateTime)' })
@@ -11,8 +11,10 @@ const server = app.listen(port, () =>
 )
 
 function shutdown(signal: NodeJS.Signals) {
+  server.closeAllConnections()
   server.close(() => {
     console.log(`${signal} - Server closed.`)
+    process.exit(0)
   })
 }
 
