@@ -1,5 +1,5 @@
 import memoryCache from 'memory-cache'
-import { Response, NestedResponse } from './scrape'
+import { NestedResponse, Response } from './github'
 
 type CacheItem = {
   ts: number // UNIX timestamp in ms
