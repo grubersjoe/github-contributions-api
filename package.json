@@ -1,7 +1,7 @@
 {
   "name": "github-contribution-api",
   "description": "Scrape contribution data of a Github user",
-  "version": "4.8.1",
+  "version": "4.9.0",
   "author": "Jonathan Gruber <gruberjonathan@gmail.com>",
   "license": "MIT",
   "private": true,
@@ -27,7 +27,12 @@
   "bugs": {
     "url": "git+https://github.com/grubersjoe/github-contributions-api.git"
   },
-  "keywords": ["github", "contributions", "calendar", "node"],
+  "keywords": [
+    "github",
+    "contributions",
+    "calendar",
+    "node"
+  ],
   "dependencies": {
     "cheerio": "^1.1.2",
     "compression": "^1.8.1",
@@ -35,7 +40,8 @@
     "cors": "^2.8.4",
     "domhandler": "^5.0.3",
     "express": "^5.2.1",
-    "memory-cache": "^0.2.0"
+    "memory-cache": "^0.2.0",
+    "zod": "^4.2.1"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.28.5",

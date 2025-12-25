@@ -1,5 +1,5 @@
 import consoleStamp from 'console-stamp'
-import app from './app'
+import { app } from './app'
 
 // Globally wrap the console to add timestamps to every call.
 consoleStamp(console, { format: ':date(isoDateTime)' })

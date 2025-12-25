@@ -1,9 +1,9 @@
 import { fromURL } from 'cheerio'
 
 import { Element, isText } from 'domhandler'
+import { ReqQuery } from './api'
 
 type Level = 0 | 1 | 2 | 3 | 4
-type Year = number | 'lastYear'
 
 interface Contribution {
   date: string
@@ -33,38 +33,21 @@ export interface NestedResponse {
   }
 }
 
-export interface ParsedQuery {
-  years: Array<number>
-  fetchAll: boolean
-  lastYear: boolean
-  format?: 'nested'
-}
-
-const requestOptions = (username: string) =>
-  ({
-    method: 'GET',
-    headers: {
-      referer: `https://github.com/${username}`,
-      'x-requested-with': 'XMLHttpRequest',
-    },
-  }) as const
-
 /**
  * @throws UserNotFoundError
  */
-async function scrapeYearLinks(username: string, query: ParsedQuery) {
+async function scrapeYearLinks(username: string, years: 'all' | Array<number>) {
   try {
     const url = `https://github.com/${username}?action=show&controller=profiles&tab=contributions&user_id=${username}`
-    const $ = await fromURL(url, { requestOptions: requestOptions(username) })
+
+    const $ = await fromURL(url, {
+      requestOptions: requestOptions(username),
+    })
 
     return $('.js-year-link')
       .get()
-      .map((a) => ({
-        year: parseInt($(a).text().trim()),
-      }))
-      .filter((link) =>
-        query.fetchAll ? true : query.years.includes(link.year),
-      )
+      .map((a) => ({ year: parseInt($(a).text().trim()) }))
+      .filter((link) => (years === 'all' ? true : years.includes(link.year)))
   } catch (error) {
     throw new UserNotFoundError(username)
   }
@@ -73,9 +56,9 @@ async function scrapeYearLinks(username: string, query: ParsedQuery) {
 /**
  * @throws Error if scraping of GitHub profile fails
  */
-async function scrapeContributionsForYear(
-  year: Year,
+async function scrapeYear(
   username: string,
+  year: number | 'lastYear',
   format?: 'nested',
 ): Promise<Response | NestedResponse> {
   const url =
@@ -193,27 +176,27 @@ const parseDay = (day: Element, tooltipsByDayId: Record<string, Element>) => {
 /**
  * @throws UserNotFoundError
  */
-export async function scrapeGitHubContributions(
+export async function scrapeContributions(
   username: string,
-  query: ParsedQuery,
+  query: ReqQuery,
 ): Promise<Response | NestedResponse> {
-  const yearLinks = await scrapeYearLinks(username, query)
-  const contributionsForYear = yearLinks.map((link) =>
-    scrapeContributionsForYear(link.year, username, query.format),
-  )
+  let requests = []
 
-  if (query.lastYear) {
-    contributionsForYear.push(
-      scrapeContributionsForYear('lastYear', username, query.format),
+  if (query.y === 'last') {
+    requests.push(scrapeYear(username, 'lastYear', query.format))
+  } else {
+    const yearLinks = await scrapeYearLinks(username, query.y)
+    requests = yearLinks.map((link) =>
+      scrapeYear(username, link.year, query.format),
     )
   }
 
-  return Promise.all(contributionsForYear).then((contributions) => {
+  return Promise.all(requests).then((contributions) => {
     if (query.format === 'nested') {
       return (contributions as Array<NestedResponse>).reduce(
-        (acc, curr) => ({
-          total: { ...acc.total, ...curr.total },
-          contributions: { ...acc.contributions, ...curr.contributions },
+        (resp, curr) => ({
+          total: { ...resp.total, ...curr.total },
+          contributions: { ...resp.contributions, ...curr.contributions },
         }),
         {
           total: {},
@@ -223,10 +206,12 @@ export async function scrapeGitHubContributions(
     }
 
     return (contributions as Array<Response>).reduce(
-      (acc, curr) => ({
-        total: { ...acc.total, ...curr.total },
-        contributions: [...acc.contributions, ...curr.contributions],
-      }),
+      (resp, curr) => {
+        return {
+          total: { ...resp.total, ...curr.total },
+          contributions: [...resp.contributions, ...curr.contributions],
+        }
+      },
       {
         total: {},
         contributions: [],
@@ -234,6 +219,14 @@ export async function scrapeGitHubContributions(
     )
   })
 }
+
+const requestOptions = (username: string) => ({
+  method: 'GET',
+  headers: {
+    referer: `https://github.com/${username}`,
+    'x-requested-with': 'XMLHttpRequest',
+  },
+})
 
 export class UserNotFoundError extends Error {
   constructor(username: string) {
