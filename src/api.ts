@@ -53,7 +53,7 @@ export type ReqQuery = z.infer<typeof querySchema>
 type Req = express.Request<
   ReqRouteParams,
   Response | NestedResponse | { error: string },
-  {},
+  Record<string, never>,
   ReqQuery
 >
 

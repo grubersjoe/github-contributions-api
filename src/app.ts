@@ -19,7 +19,9 @@ app.get('/', (_req, res) => {
   })
 })
 
-app.get(`/${version}`, (_, res) => res.redirect('/'))
+app.get(`/${version}`, (_, res) => {
+  res.redirect('/')
+})
 app.use(`/${version}`, router)
 
 const errorHandler: ErrorRequestHandler = (error, _req, res, next) => {
@@ -27,10 +29,11 @@ const errorHandler: ErrorRequestHandler = (error, _req, res, next) => {
 
   if (error instanceof ZodError) {
     const issues = error.issues.map((i) => `${i.path}: ${i.message}.`).join(' ')
-
     res.status(400).json({ error: issues })
-  } else {
+  } else if (error instanceof Error) {
     res.status(500).json({ error: error.message })
+  } else {
+    res.status(500).json({ error: 'internal' })
   }
 
   next()

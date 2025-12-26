@@ -24,13 +24,7 @@ export type NestedResponse = {
     [year: number]: number
     [year: string]: number // 'lastYear;
   }
-  contributions: {
-    [year: number]: {
-      [month: number]: {
-        [day: number]: Contribution
-      }
-    }
-  }
+  contributions: Record<number, Record<number, Record<number, Contribution>>> // [y][m][d]
 }
 
 /**
@@ -48,7 +42,7 @@ async function scrapeYearLinks(username: string, years: 'all' | Array<number>) {
       .get()
       .map((a) => ({ year: parseInt($(a).text().trim()) }))
       .filter((link) => (years === 'all' ? true : years.includes(link.year)))
-  } catch (error) {
+  } catch {
     throw new UserNotFoundError(username)
   }
 }
@@ -76,10 +70,9 @@ async function scrapeYear(
     return dateA.localeCompare(dateB, 'en')
   })
 
-  const totalMatch = $('.js-yearly-contributions h2')
-    .text()
-    .trim()
-    .match(/^([0-9,]+)\s/)
+  const totalMatch = /^([0-9,]+)\s/.exec(
+    $('.js-yearly-contributions h2').text().trim(),
+  )
 
   if (!totalMatch) {
     throw Error('Unable to parse total contributions count.')
@@ -91,7 +84,7 @@ async function scrapeYear(
   const tooltipsByDayId = $('.js-calendar-graph tool-tip')
     .toArray()
     .reduce<Record<string, Element>>((map, elem) => {
-      map[elem.attribs['for']] = elem
+      map[elem.attribs.for] = elem
       return map
     }, {})
 
@@ -107,9 +100,8 @@ async function scrapeYear(
       const { date, contribution } = parseDay(day, tooltipsByDayId)
       const [y, m, d] = date
 
-      if (!data.contributions[y]) data.contributions[y] = {}
-      if (!data.contributions[y][m]) data.contributions[y][m] = {}
-
+      data.contributions[y] ??= {}
+      data.contributions[y][m] ??= {}
       data.contributions[y][m][d] = contribution
 
       return data
@@ -127,7 +119,7 @@ async function scrapeYear(
 
 const parseDay = (day: Element, tooltipsByDayId: Record<string, Element>) => {
   const attr = {
-    id: day.attribs['id'],
+    id: day.attribs.id,
     date: day.attribs['data-date'],
     level: day.attribs['data-level'],
   }
@@ -141,13 +133,12 @@ const parseDay = (day: Element, tooltipsByDayId: Record<string, Element>) => {
   }
 
   let count = 0
-  if (tooltipsByDayId[attr.id]) {
-    const text = tooltipsByDayId[attr.id].firstChild
-    if (text && isText(text)) {
-      const countMatch = text.data.trim().match(/^\d+/)
-      if (countMatch) {
-        count = parseInt(countMatch[0])
-      }
+
+  const text = tooltipsByDayId[attr.id].firstChild
+  if (text && isText(text)) {
+    const countMatch = /^\d+/.exec(text.data.trim())
+    if (countMatch) {
+      count = parseInt(countMatch[0])
     }
   }
 

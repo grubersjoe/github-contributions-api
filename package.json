@@ -11,11 +11,13 @@
   },
   "scripts": {
     "build": "rm -rf build/* && tsc",
+    "check": "pnpm install --frozen-lockfile && prettier -c . && tsc && pnpm lint && pnpm test:unit",
     "dev": "nodemon src/server.ts --exec ts-node src/server.ts",
     "format": "prettier --write .",
-    "postinstall": "npm run build",
+    "lint": "eslint .",
+    "postinstall": "pnpm run build",
     "prepare": "husky",
-    "prestart": "npm run build",
+    "prestart": "pnpm run build",
     "start": "node build/server.js",
     "test": "jest",
     "typecheck": "tsc --noEmit"
@@ -46,6 +48,7 @@
   "devDependencies": {
     "@babel/preset-env": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
+    "@eslint/js": "^9.39.2",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -53,13 +56,16 @@
     "@types/memory-cache": "^0.2.6",
     "@types/node": "^22.0.0",
     "@types/supertest": "^6.0.3",
+    "eslint": "^9.39.2",
+    "globals": "^16.5.0",
     "husky": "^9.1.7",
     "jest": "^30.2.0",
     "nodemon": "^3.1.11",
     "prettier": "^3.7.4",
     "supertest": "^7.1.4",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.50.1"
   },
   "prettier": {
     "semi": false,
