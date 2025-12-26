@@ -5,13 +5,13 @@ import { ReqQuery } from './api'
 
 type Level = 0 | 1 | 2 | 3 | 4
 
-interface Contribution {
+type Contribution = {
   date: string
   count: number
   level: Level
 }
 
-export interface Response {
+export type Response = {
   total: {
     [year: number]: number
     [year: string]: number // 'lastYear;
@@ -19,7 +19,7 @@ export interface Response {
   contributions: Array<Contribution>
 }
 
-export interface NestedResponse {
+export type NestedResponse = {
   total: {
     [year: number]: number
     [year: string]: number // 'lastYear;
