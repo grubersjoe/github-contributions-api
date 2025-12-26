@@ -11,13 +11,13 @@
   },
   "scripts": {
     "build": "rm -rf build/* && tsc",
-    "check": "pnpm install --frozen-lockfile && prettier -c . && tsc && pnpm lint && pnpm test:unit",
+    "check": "pnpm install --frozen-lockfile && prettier -c . && pnpm typecheck && pnpm lint && pnpm test",
     "dev": "nodemon src/server.ts --exec ts-node src/server.ts",
     "format": "prettier --write .",
     "lint": "eslint .",
-    "postinstall": "pnpm run build",
+    "postinstall": "pnpm build",
     "prepare": "husky",
-    "prestart": "pnpm run build",
+    "prestart": "pnpm build",
     "start": "node build/server.js",
     "test": "jest",
     "typecheck": "tsc --noEmit"
