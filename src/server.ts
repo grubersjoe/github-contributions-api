@@ -1,17 +1,22 @@
 import consoleStamp from 'console-stamp'
-import app from './app'
+import { app } from './app'
 
 // Globally wrap the console to add timestamps to every call.
 consoleStamp(console, { format: ':date(isoDateTime)' })
 
-const server = app.listen(process.env.PORT ?? 8080, () =>
-  console.log(
-    `Server listening on http://localhost:${process.env.PORT || 8080}`,
-  ),
-)
+const port = process.env.PORT ?? 8080
 
-process.on('SIGTERM', () => {
-  server.close(() => {
-    console.log('SIGTERM - HTTP server closed')
-  })
+const server = app.listen(port, () => {
+  console.log(`Server listening on http://localhost:${port}`)
 })
+
+function shutdown(signal: NodeJS.Signals) {
+  server.closeAllConnections()
+  server.close(() => {
+    console.log(`${signal} - Server closed.`)
+    process.exit(0)
+  })
+}
+
+process.on('SIGINT', shutdown)
+process.on('SIGTERM', shutdown)

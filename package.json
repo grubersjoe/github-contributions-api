@@ -1,7 +1,7 @@
 {
   "name": "github-contribution-api",
   "description": "Scrape contribution data of a Github user",
-  "version": "4.8.1",
+  "version": "4.9.0",
   "author": "Jonathan Gruber <gruberjonathan@gmail.com>",
   "license": "MIT",
   "private": true,
@@ -11,11 +11,13 @@
   },
   "scripts": {
     "build": "rm -rf build/* && tsc",
+    "check": "pnpm install --frozen-lockfile && prettier -c . && pnpm typecheck && pnpm lint && pnpm test",
     "dev": "nodemon src/server.ts --exec ts-node src/server.ts",
     "format": "prettier --write .",
+    "lint": "eslint .",
+    "postinstall": "pnpm build",
     "prepare": "husky",
-    "postinstall": "npm run build",
-    "prestart": "npm run build",
+    "prestart": "pnpm build",
     "start": "node build/server.js",
     "test": "jest",
     "typecheck": "tsc --noEmit"
@@ -27,7 +29,12 @@
   "bugs": {
     "url": "git+https://github.com/grubersjoe/github-contributions-api.git"
   },
-  "keywords": ["github", "contributions", "calendar", "node"],
+  "keywords": [
+    "github",
+    "contributions",
+    "calendar",
+    "node"
+  ],
   "dependencies": {
     "cheerio": "^1.1.2",
     "compression": "^1.8.1",
@@ -35,11 +42,13 @@
     "cors": "^2.8.4",
     "domhandler": "^5.0.3",
     "express": "^5.2.1",
-    "memory-cache": "^0.2.0"
+    "memory-cache": "^0.2.0",
+    "zod": "^4.2.1"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
+    "@eslint/js": "^9.39.2",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -47,13 +56,16 @@
     "@types/memory-cache": "^0.2.6",
     "@types/node": "^22.0.0",
     "@types/supertest": "^6.0.3",
+    "eslint": "^9.39.2",
+    "globals": "^16.5.0",
     "husky": "^9.1.7",
     "jest": "^30.2.0",
     "nodemon": "^3.1.11",
     "prettier": "^3.7.4",
     "supertest": "^7.1.4",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.50.1"
   },
   "prettier": {
     "semi": false,

@@ -1,17 +1,17 @@
 import { fromURL } from 'cheerio'
 
 import { Element, isText } from 'domhandler'
+import { ReqQuery } from './api'
 
 type Level = 0 | 1 | 2 | 3 | 4
-type Year = number | 'lastYear'
 
-interface Contribution {
+type Contribution = {
   date: string
   count: number
   level: Level
 }
 
-export interface Response {
+export type Response = {
   total: {
     [year: number]: number
     [year: string]: number // 'lastYear;
@@ -19,53 +19,30 @@ export interface Response {
   contributions: Array<Contribution>
 }
 
-export interface NestedResponse {
+export type NestedResponse = {
   total: {
     [year: number]: number
     [year: string]: number // 'lastYear;
   }
-  contributions: {
-    [year: number]: {
-      [month: number]: {
-        [day: number]: Contribution
-      }
-    }
-  }
+  contributions: Record<number, Record<number, Record<number, Contribution>>> // [y][m][d]
 }
-
-export interface ParsedQuery {
-  years: Array<number>
-  fetchAll: boolean
-  lastYear: boolean
-  format?: 'nested'
-}
-
-const requestOptions = (username: string) =>
-  ({
-    method: 'GET',
-    headers: {
-      referer: `https://github.com/${username}`,
-      'x-requested-with': 'XMLHttpRequest',
-    },
-  }) as const
 
 /**
  * @throws UserNotFoundError
  */
-async function scrapeYearLinks(username: string, query: ParsedQuery) {
+async function scrapeYearLinks(username: string, years: 'all' | Array<number>) {
   try {
     const url = `https://github.com/${username}?action=show&controller=profiles&tab=contributions&user_id=${username}`
-    const $ = await fromURL(url, { requestOptions: requestOptions(username) })
+
+    const $ = await fromURL(url, {
+      requestOptions: requestOptions(username),
+    })
 
     return $('.js-year-link')
       .get()
-      .map((a) => ({
-        year: parseInt($(a).text().trim()),
-      }))
-      .filter((link) =>
-        query.fetchAll ? true : query.years.includes(link.year),
-      )
-  } catch (error) {
+      .map((a) => ({ year: parseInt($(a).text().trim()) }))
+      .filter((link) => (years === 'all' ? true : years.includes(link.year)))
+  } catch {
     throw new UserNotFoundError(username)
   }
 }
@@ -73,9 +50,9 @@ async function scrapeYearLinks(username: string, query: ParsedQuery) {
 /**
  * @throws Error if scraping of GitHub profile fails
  */
-async function scrapeContributionsForYear(
-  year: Year,
+async function scrapeYear(
   username: string,
+  year: number | 'lastYear',
   format?: 'nested',
 ): Promise<Response | NestedResponse> {
   const url =
@@ -93,10 +70,9 @@ async function scrapeContributionsForYear(
     return dateA.localeCompare(dateB, 'en')
   })
 
-  const totalMatch = $('.js-yearly-contributions h2')
-    .text()
-    .trim()
-    .match(/^([0-9,]+)\s/)
+  const totalMatch = /^([0-9,]+)\s/.exec(
+    $('.js-yearly-contributions h2').text().trim(),
+  )
 
   if (!totalMatch) {
     throw Error('Unable to parse total contributions count.')
@@ -108,7 +84,7 @@ async function scrapeContributionsForYear(
   const tooltipsByDayId = $('.js-calendar-graph tool-tip')
     .toArray()
     .reduce<Record<string, Element>>((map, elem) => {
-      map[elem.attribs['for']] = elem
+      map[elem.attribs.for] = elem
       return map
     }, {})
 
@@ -124,9 +100,8 @@ async function scrapeContributionsForYear(
       const { date, contribution } = parseDay(day, tooltipsByDayId)
       const [y, m, d] = date
 
-      if (!data.contributions[y]) data.contributions[y] = {}
-      if (!data.contributions[y][m]) data.contributions[y][m] = {}
-
+      data.contributions[y] ??= {}
+      data.contributions[y][m] ??= {}
       data.contributions[y][m][d] = contribution
 
       return data
@@ -144,7 +119,7 @@ async function scrapeContributionsForYear(
 
 const parseDay = (day: Element, tooltipsByDayId: Record<string, Element>) => {
   const attr = {
-    id: day.attribs['id'],
+    id: day.attribs.id,
     date: day.attribs['data-date'],
     level: day.attribs['data-level'],
   }
@@ -158,13 +133,12 @@ const parseDay = (day: Element, tooltipsByDayId: Record<string, Element>) => {
   }
 
   let count = 0
-  if (tooltipsByDayId[attr.id]) {
-    const text = tooltipsByDayId[attr.id].firstChild
-    if (text && isText(text)) {
-      const countMatch = text.data.trim().match(/^\d+/)
-      if (countMatch) {
-        count = parseInt(countMatch[0])
-      }
+
+  const text = tooltipsByDayId[attr.id].firstChild
+  if (text && isText(text)) {
+    const countMatch = /^\d+/.exec(text.data.trim())
+    if (countMatch) {
+      count = parseInt(countMatch[0])
     }
   }
 
@@ -193,27 +167,27 @@ const parseDay = (day: Element, tooltipsByDayId: Record<string, Element>) => {
 /**
  * @throws UserNotFoundError
  */
-export async function scrapeGitHubContributions(
+export async function scrapeContributions(
   username: string,
-  query: ParsedQuery,
+  query: ReqQuery,
 ): Promise<Response | NestedResponse> {
-  const yearLinks = await scrapeYearLinks(username, query)
-  const contributionsForYear = yearLinks.map((link) =>
-    scrapeContributionsForYear(link.year, username, query.format),
-  )
+  let requests = []
 
-  if (query.lastYear) {
-    contributionsForYear.push(
-      scrapeContributionsForYear('lastYear', username, query.format),
+  if (query.y === 'last') {
+    requests.push(scrapeYear(username, 'lastYear', query.format))
+  } else {
+    const yearLinks = await scrapeYearLinks(username, query.y)
+    requests = yearLinks.map((link) =>
+      scrapeYear(username, link.year, query.format),
     )
   }
 
-  return Promise.all(contributionsForYear).then((contributions) => {
+  return Promise.all(requests).then((contributions) => {
     if (query.format === 'nested') {
       return (contributions as Array<NestedResponse>).reduce(
-        (acc, curr) => ({
-          total: { ...acc.total, ...curr.total },
-          contributions: { ...acc.contributions, ...curr.contributions },
+        (resp, curr) => ({
+          total: { ...resp.total, ...curr.total },
+          contributions: { ...resp.contributions, ...curr.contributions },
         }),
         {
           total: {},
@@ -223,10 +197,12 @@ export async function scrapeGitHubContributions(
     }
 
     return (contributions as Array<Response>).reduce(
-      (acc, curr) => ({
-        total: { ...acc.total, ...curr.total },
-        contributions: [...acc.contributions, ...curr.contributions],
-      }),
+      (resp, curr) => {
+        return {
+          total: { ...resp.total, ...curr.total },
+          contributions: [...resp.contributions, ...curr.contributions],
+        }
+      },
       {
         total: {},
         contributions: [],
@@ -234,6 +210,14 @@ export async function scrapeGitHubContributions(
     )
   })
 }
+
+const requestOptions = (username: string) => ({
+  method: 'GET',
+  headers: {
+    referer: `https://github.com/${username}`,
+    'x-requested-with': 'XMLHttpRequest',
+  },
+})
 
 export class UserNotFoundError extends Error {
   constructor(username: string) {
