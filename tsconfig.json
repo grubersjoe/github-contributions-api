@@ -1,6 +1,7 @@
 {
-  "include": ["src"],
+  "include": ["src", "./*"],
   "compilerOptions": {
+    "allowJs": true,
     "esModuleInterop": true,
     "lib": ["ES2023"],
     "module": "commonjs",
