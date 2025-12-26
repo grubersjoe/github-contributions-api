@@ -3,6 +3,7 @@ import request from 'supertest'
 import { app, version } from '../src/app'
 import { cache } from '../src/cache'
 import * as github from '../src/github'
+import { Response } from '../src/github'
 import testDataMultipleYears from './fixtures/grubersjoe-2017-2018.json'
 import testDataNested from './fixtures/grubersjoe-2018-nested.json'
 import testData from './fixtures/grubersjoe-2018.json'
@@ -27,7 +28,7 @@ describe('The :username endpoint', () => {
     request(app)
       .get(`/${version}/${username}?${y}`)
       .expect(200)
-      .expect(({ body }) => {
+      .expect(({ body }: { body: Response }) => {
         expect(Object.keys(body.total).length).toBeGreaterThanOrEqual(14)
 
         for (const count of Object.values(body.total)) {
@@ -41,19 +42,23 @@ describe('The :username endpoint', () => {
     request(app)
       .get(`/${version}/${username}?y=2018`)
       .expect(200)
-      .expect(({ body }) => expect(body).toStrictEqual(testData)))
+      .expect(({ body }) => {
+        expect(body).toStrictEqual(testData)
+      }))
 
   test('returns data for several years', async () =>
     request(app)
       .get(`/${version}/${username}?y=2017&y=2018`)
       .expect(200)
-      .expect(({ body }) => expect(body).toStrictEqual(testDataMultipleYears)))
+      .expect(({ body }) => {
+        expect(body).toStrictEqual(testDataMultipleYears)
+      }))
 
   test('returns data for the last year', () =>
     request(app)
       .get(`/${version}/${username}?y=last`)
       .expect(200)
-      .expect(({ body }) => {
+      .expect(({ body }: { body: Response }) => {
         expect(Object.keys(body.total)).toContain('lastYear')
         expect(typeof body.total.lastYear).toBe('number')
       }))
@@ -62,18 +67,20 @@ describe('The :username endpoint', () => {
     request(app)
       .get(`/${version}/${username}?y=2018&format=nested`)
       .expect(200)
-      .expect(({ body }) => expect(body).toStrictEqual(testDataNested)))
+      .expect(({ body }) => {
+        expect(body).toStrictEqual(testDataNested)
+      }))
 
   test('returns an empty response if no data is available', () =>
     request(app)
       .get(`/${version}/${username}?y=1900`)
       .expect(200)
-      .expect(({ body }) =>
+      .expect(({ body }) => {
         expect(body).toStrictEqual({
           total: {},
           contributions: [],
-        }),
-      ))
+        })
+      }))
 
   test('returns 404 if the user cannot be found', () => {
     const nonExistingUser = '43b83cb5-2d8f-44d3-b01c-98a73af7a15f'
@@ -81,11 +88,11 @@ describe('The :username endpoint', () => {
     return request(app)
       .get(`/${version}/${nonExistingUser}`)
       .expect(404)
-      .expect(({ body }) =>
+      .expect(({ body }) => {
         expect(body).toStrictEqual({
           error: `User "${nonExistingUser}" not found.`,
-        }),
-      )
+        })
+      })
   })
 
   test.each([['y='], ['y=invalid'], ['y=2020abc'], ['y=abc2020']])(
@@ -94,11 +101,11 @@ describe('The :username endpoint', () => {
       request(app)
         .get(`/${version}/${username}?${y}`)
         .expect(400)
-        .expect(({ body }) =>
+        .expect(({ body }) => {
           expect(body).toStrictEqual({
             error: `y: Invalid string: must match pattern /^\\d+$/.`,
-          }),
-        ),
+          })
+        }),
   )
 
   test.each([['format=invalid'], ['format=']])(
@@ -107,22 +114,22 @@ describe('The :username endpoint', () => {
       request(app)
         .get(`/${version}/${username}?format=invalid`)
         .expect(400)
-        .expect(({ body }) =>
+        .expect(({ body }) => {
           expect(body).toStrictEqual({
             error: `format: Invalid input: expected "nested".`,
-          }),
-        ),
+          })
+        }),
   )
 
   test('combines all validation errors', () =>
     request(app)
       .get(`/${version}/${username}?y=invalid&format=invalid`)
       .expect(400)
-      .expect(({ body }) =>
+      .expect(({ body }) => {
         expect(body).toStrictEqual({
           error: `y: Invalid string: must match pattern /^\\d+$/. format: Invalid input: expected "nested".`,
-        }),
-      ))
+        })
+      }))
 
   test('returns 500 for errors', () => {
     const scrapeContributionsMock = jest.spyOn(github, 'scrapeContributions')
@@ -134,11 +141,11 @@ describe('The :username endpoint', () => {
     return request(app)
       .get(`/${version}/${username}`)
       .expect(500)
-      .expect(({ body }) =>
+      .expect(({ body }) => {
         expect(body).toStrictEqual({
           error: `Failed scraping contribution data of '${username}': unexpected error`,
-        }),
-      )
+        })
+      })
   })
 
   test('caches responses', async () => {
@@ -169,14 +176,18 @@ describe('The :username endpoint', () => {
     return request(app)
       .get(`/${version}/${username}`)
       .expect(200)
-      .expect(({ headers }) => expect(headers['x-cache']).toBe('MISS'))
+      .expect(({ headers }) => {
+        expect(headers['x-cache']).toBe('MISS')
+      })
       .then(() => new Promise((resolve) => setTimeout(resolve, 1000)))
       .then(() =>
         request(app)
           .get(`/${version}/${username}`)
           .set('cache-control', 'no-cache')
           .expect(200)
-          .expect(({ headers }) => expect(headers['x-cache']).toBe('MISS')),
+          .expect(({ headers }) => {
+            expect(headers['x-cache']).toBe('MISS')
+          }),
       )
   })
 })
