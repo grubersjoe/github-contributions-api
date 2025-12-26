@@ -1,47 +1,46 @@
-name: CI
-
+name: Tests
 on:
-  - push
-  - pull_request
+  push:
+  pull_request:
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6.0.1
+      - uses: actions/checkout@v6.0.1
 
-      - name: Install Node
-        uses: actions/setup-node@v6.1.0
+      - uses: actions/setup-node@v6.1.0
         with:
           node-version: node
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4.2.0
-        id: pnpm-install
+      - uses: pnpm/action-setup@v4.2.0
+        name: Install pnpm
         with:
           version: latest
           run_install: false
 
       - name: Get pnpm store directory
-        id: pnpm-cache
         shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
       - uses: actions/cache@v5.0.1
         name: Setup pnpm cache
         with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          restore-keys: ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install -r --ignore-scripts
+
+      - name: Check formatting (Prettier)
+        run: pnpm exec prettier -c .
+
+      - name: Run unit tests
+        run: pnpm test
 
       - name: Run type checks (TypeScript)
         run: pnpm tsc
 
-      - name: Run unit tests
-        run: pnpm test
+      - name: Run linter (ESLint)
+        run: pnpm lint
