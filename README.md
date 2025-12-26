@@ -136,21 +136,21 @@ https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?y=all # default
 The responses are structured like this:
 
 ```typescript
-interface Contribution {
+type Contribution = {
   date: string
   count: number
   level: 0 | 1 | 2 | 3 | 4
 }
 
-interface Response {
+type Response = {
   total: {
     [year: number]: number
-    [year: string]: number // 'lastYear'
+    [year: string]: number // 'lastYear;
   }
   contributions: Array<Contribution>
 }
 
-interface NestedResponse {
+type NestedResponse = {
   total: {
     [year: number]: number
     [year: string]: number // 'lastYear;
