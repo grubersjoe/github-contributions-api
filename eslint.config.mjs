@@ -25,6 +25,12 @@ export default defineConfig(
   },
   {
     // Note: there must be no other properties in this object
-    ignores: ['build/', 'coverage/', './babel.config.js', './eslint.config.mjs'],
+    ignores: [
+      'build/',
+      'coverage/',
+      './babel.config.js',
+      './eslint.config.mjs',
+      './jest.config.ts',
+    ],
   },
 )
