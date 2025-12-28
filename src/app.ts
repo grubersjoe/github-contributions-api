@@ -25,15 +25,24 @@ app.get(`/${version}`, (_, res) => {
 app.use(`/${version}`, router)
 
 const errorHandler: ErrorRequestHandler = (error, _req, res, next) => {
+  if (error instanceof ZodError) {
+    res.status(400).json({
+      error: 'Invalid request',
+      issues: error.issues.map((i) => ({
+        code: i.code,
+        path: i.path.join('.'),
+        message: i.message,
+      })),
+    })
+    return
+  }
+
   console.error(error)
 
-  if (error instanceof ZodError) {
-    const issues = error.issues.map((i) => `${i.path}: ${i.message}.`).join(' ')
-    res.status(400).json({ error: issues })
-  } else if (error instanceof Error) {
+  if (error instanceof Error) {
     res.status(500).json({ error: error.message })
   } else {
-    res.status(500).json({ error: 'internal' })
+    res.status(500).json({ error: 'Internal' })
   }
 
   next()

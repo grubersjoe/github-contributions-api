@@ -1,16 +1,17 @@
 {
-  "include": ["src", "./*"],
+  "include": ["src"],
   "compilerOptions": {
     "allowJs": true,
     "esModuleInterop": true,
+    "isolatedModules": true,
     "lib": ["ES2023"],
-    "module": "commonjs",
-    "target": "ES2022",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "noImplicitOverride": true,
     "outDir": "build",
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "sourceMap": true,
-    "strict": true
+    "strict": true,
+    "target": "ES2023"
   }
 }

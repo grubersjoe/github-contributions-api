@@ -90,7 +90,7 @@ describe('The :username endpoint', () => {
       .expect(404)
       .expect(({ body }) => {
         expect(body).toStrictEqual({
-          error: `User "${nonExistingUser}" not found.`,
+          error: `GitHub user "${nonExistingUser}" not found.`,
         })
       })
   })
@@ -103,7 +103,14 @@ describe('The :username endpoint', () => {
         .expect(400)
         .expect(({ body }) => {
           expect(body).toStrictEqual({
-            error: `y: Invalid string: must match pattern /^\\d+$/.`,
+            error: `Invalid request`,
+            issues: [
+              {
+                code: 'invalid_format',
+                message: 'Invalid string: must match pattern /^\\d+$/',
+                path: 'y',
+              },
+            ],
           })
         }),
   )
@@ -116,7 +123,14 @@ describe('The :username endpoint', () => {
         .expect(400)
         .expect(({ body }) => {
           expect(body).toStrictEqual({
-            error: `format: Invalid input: expected "nested".`,
+            error: `Invalid request`,
+            issues: [
+              {
+                code: 'invalid_value',
+                message: 'Invalid input: expected "nested"',
+                path: 'format',
+              },
+            ],
           })
         }),
   )
@@ -127,7 +141,19 @@ describe('The :username endpoint', () => {
       .expect(400)
       .expect(({ body }) => {
         expect(body).toStrictEqual({
-          error: `y: Invalid string: must match pattern /^\\d+$/. format: Invalid input: expected "nested".`,
+          error: 'Invalid request',
+          issues: [
+            {
+              code: 'invalid_format',
+              message: 'Invalid string: must match pattern /^\\d+$/',
+              path: 'y',
+            },
+            {
+              code: 'invalid_value',
+              message: 'Invalid input: expected "nested"',
+              path: 'format',
+            },
+          ],
         })
       }))
 
@@ -143,7 +169,7 @@ describe('The :username endpoint', () => {
       .expect(500)
       .expect(({ body }) => {
         expect(body).toStrictEqual({
-          error: `Failed scraping contribution data of '${username}': unexpected error`,
+          error: `unexpected error`,
         })
       })
   })

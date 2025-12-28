@@ -75,7 +75,7 @@ async function scrapeYear(
   )
 
   if (!totalMatch) {
-    throw Error('Unable to parse total contributions count.')
+    throw Error('Failed parsing total contributions count')
   }
 
   const total = parseInt(totalMatch[0].replace(/,/g, ''))
@@ -125,11 +125,11 @@ const parseDay = (day: Element, tooltipsByDayId: Record<string, Element>) => {
   }
 
   if (!attr.date) {
-    throw Error('Unable to parse contribution date attribute.')
+    throw Error('Failed parsing contribution date attribute')
   }
 
   if (!attr.level) {
-    throw Error('Unable to parse contribution level attribute.')
+    throw Error('Failed parsing contribution level attribute')
   }
 
   let count = 0
@@ -145,11 +145,11 @@ const parseDay = (day: Element, tooltipsByDayId: Record<string, Element>) => {
   const level = parseInt(attr.level) as Level
 
   if (isNaN(count)) {
-    throw Error('Unable to parse contribution count.')
+    throw Error('Failed parsing contribution count')
   }
 
   if (isNaN(level)) {
-    throw Error('Unable to parse contribution level.')
+    throw Error('Failed parsing contribution level')
   }
 
   const contribution = {
@@ -221,6 +221,6 @@ const requestOptions = (username: string) => ({
 
 export class UserNotFoundError extends Error {
   constructor(username: string) {
-    super(`User "${username}" not found.`)
+    super(`GitHub user "${username}" not found.`)
   }
 }
