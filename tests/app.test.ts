@@ -107,7 +107,8 @@ describe('The :username endpoint', () => {
             issues: [
               {
                 code: 'invalid_format',
-                message: 'Invalid string: must match pattern /^\\d+$/',
+                message:
+                  'Invalid string: must match pattern /^(?:\\d+|all|last)$/',
                 path: 'y',
               },
             ],
@@ -145,7 +146,8 @@ describe('The :username endpoint', () => {
           issues: [
             {
               code: 'invalid_format',
-              message: 'Invalid string: must match pattern /^\\d+$/',
+              message:
+                'Invalid string: must match pattern /^(?:\\d+|all|last)$/',
               path: 'y',
             },
             {
@@ -180,11 +182,9 @@ describe('The :username endpoint', () => {
       })
   })
 
-  test('caches responses', async () => {
-    jest.setTimeout(10 * 1000)
-
-    return request(app)
-      .get(`/${version}/${username}`)
+  test('caches responses', async () =>
+    request(app)
+      .get(`/${version}/${username}?y=2020`)
       .expect(200)
       .expect(({ headers }) => {
         expect(Number(headers.age)).toBe(0)
@@ -193,20 +193,17 @@ describe('The :username endpoint', () => {
       .then(() => new Promise((resolve) => setTimeout(resolve, 1000)))
       .then(() =>
         request(app)
-          .get(`/${version}/${username}`)
+          .get(`/${version}/${username}?y=2020`)
           .expect(200)
           .expect(({ headers }) => {
             expect(Number(headers.age)).toBeGreaterThan(0)
             expect(headers['x-cache']).toBe('HIT')
           }),
-      )
-  })
+      ))
 
-  test('ignores cache for cache-control: no-cache', async () => {
-    jest.setTimeout(10 * 1000)
-
-    return request(app)
-      .get(`/${version}/${username}`)
+  test('ignores cache for cache-control: no-cache', async () =>
+    request(app)
+      .get(`/${version}/${username}?y=2020`)
       .expect(200)
       .expect(({ headers }) => {
         expect(headers['x-cache']).toBe('MISS')
@@ -214,12 +211,11 @@ describe('The :username endpoint', () => {
       .then(() => new Promise((resolve) => setTimeout(resolve, 1000)))
       .then(() =>
         request(app)
-          .get(`/${version}/${username}`)
+          .get(`/${version}/${username}?y=2020`)
           .set('cache-control', 'no-cache')
           .expect(200)
           .expect(({ headers }) => {
             expect(headers['x-cache']).toBe('MISS')
           }),
-      )
-  })
+      ))
 })

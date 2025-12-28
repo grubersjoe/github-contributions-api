@@ -15,10 +15,8 @@ const routeSchema = z.object({
 const querySchema = z.object({
   y: z
     .union([
+      z.string().regex(/^(?:\d+|all|last)$/),
       z.array(z.string().regex(/^\d+$/)),
-      z.string().regex(/^\d+$/),
-      z.literal('all'),
-      z.literal('last'),
     ])
     .optional()
     .transform((y, ctx) => {
