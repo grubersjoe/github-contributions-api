@@ -6,7 +6,11 @@ consoleStamp(console, { format: ':date(isoDateTime)' })
 
 const port = process.env.PORT ?? 8080
 
-const server = app.listen(port, () => {
+const server = app.listen(port, (error) => {
+  if (error) {
+    console.error(error)
+    process.exit(1)
+  }
   console.log(`Server listening on http://localhost:${port}`)
 })
 
