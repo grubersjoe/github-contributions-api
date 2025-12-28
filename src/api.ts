@@ -36,7 +36,7 @@ const querySchema = z.object({
       if (!parsed.success) {
         ctx.addIssue({
           code: 'invalid_value',
-          message: `Invalid input: expected an integer, "all" or "last"`,
+          message: parsed.error.message,
           values: years,
         })
         return z.NEVER
