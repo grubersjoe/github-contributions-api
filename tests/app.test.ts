@@ -157,6 +157,12 @@ describe('The :username endpoint', () => {
         })
       }))
 
+  test('skips duplicate y parameters', async () => {
+    const scrapeContributionsSpy = jest.spyOn(github, 'scrapeContributions')
+    await request(app).get(`/${version}/${username}?y=2020&y=2020`).expect(200)
+    expect(scrapeContributionsSpy).toHaveBeenCalledTimes(1)
+  })
+
   test('returns 500 for errors', () => {
     const scrapeContributionsMock = jest.spyOn(github, 'scrapeContributions')
 

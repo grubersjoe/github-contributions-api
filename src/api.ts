@@ -42,7 +42,7 @@ const querySchema = z.object({
         return z.NEVER
       }
 
-      return parsed.data
+      return uniq(parsed.data)
     }),
   format: z.literal('nested').optional(),
 })
@@ -104,3 +104,5 @@ router.get(`/:username`, async (req: Req, res, next) => {
     next(error)
   }
 })
+
+const uniq = <T = unknown>(a: Array<T>) => [...new Set(a)]
