@@ -50,9 +50,18 @@ const querySchema = z.object({
 type ReqRouteParams = z.infer<typeof routeSchema>
 export type ReqQuery = z.infer<typeof querySchema>
 
+type ErrorResponse = {
+  error: string
+  issues?: Array<{
+    code: string
+    path: string
+    message: string
+  }>
+}
+
 type Req = express.Request<
   ReqRouteParams,
-  Response | NestedResponse | { error: string },
+  Response | NestedResponse | ErrorResponse,
   Record<string, never>,
   ReqQuery
 >
@@ -92,12 +101,6 @@ router.get(`/:username`, async (req: Req, res, next) => {
       return
     }
 
-    next(
-      new Error(
-        `Failed scraping contribution data of '${username}': ${
-          error instanceof Error ? error.message : 'Unknown error.'
-        }`,
-      ),
-    )
+    next(error)
   }
 })

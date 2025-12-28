@@ -163,6 +163,15 @@ type NestedResponse = {
     }
   }
 }
+
+type ErrorResponse = {
+  error: string
+  issues?: Array<{
+    code: string
+    path: string
+    message: string
+  }>
+}
 ```
 
 ### Caching
