@@ -196,7 +196,7 @@ describe('The :username endpoint', () => {
           .get(`/${version}/${username}?y=2020`)
           .expect(200)
           .expect(({ headers }) => {
-            expect(Number(headers.age)).toBeGreaterThan(0)
+            expect(Number(headers.age)).toBeGreaterThanOrEqual(1)
             expect(headers['x-cache']).toBe('HIT')
           }),
       ))
@@ -206,15 +206,16 @@ describe('The :username endpoint', () => {
       .get(`/${version}/${username}?y=2020`)
       .expect(200)
       .expect(({ headers }) => {
+        expect(Number(headers.age)).toBe(0)
         expect(headers['x-cache']).toBe('MISS')
       })
-      .then(() => new Promise((resolve) => setTimeout(resolve, 1000)))
       .then(() =>
         request(app)
           .get(`/${version}/${username}?y=2020`)
           .set('cache-control', 'no-cache')
           .expect(200)
           .expect(({ headers }) => {
+            expect(Number(headers.age)).toBe(0)
             expect(headers['x-cache']).toBe('MISS')
           }),
       ))
