@@ -34,8 +34,7 @@ describe('The :username endpoint', () => {
         for (const count of Object.values(body.total)) {
           expect(typeof count).toBe('number')
         }
-      })
-      .timeout(8 * 1000),
+      }),
   )
 
   test('returns data for a single year', () =>
