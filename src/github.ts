@@ -31,20 +31,21 @@ export type NestedResponse = {
  * @throws UserNotFoundError
  */
 async function scrapeYearLinks(username: string, years: 'all' | Array<number>) {
-  try {
-    const url = `https://github.com/${username}?action=show&controller=profiles&tab=contributions&user_id=${username}`
+  const url = `https://github.com/${username}?action=show&controller=profiles&tab=contributions&user_id=${username}`
 
-    const $ = await fromURL(url, {
-      requestOptions: requestOptions(username),
-    })
+  const $ = await fromURL(url, {
+    requestOptions: requestOptions(username),
+  }).catch((error: { statusCode: number }) => {
+    if (error.statusCode === 404) {
+      throw new UserNotFoundError(username)
+    }
+    throw error
+  })
 
-    return $('.js-year-link')
-      .get()
-      .map((a) => ({ year: parseInt($(a).text().trim()) }))
-      .filter((link) => (years === 'all' ? true : years.includes(link.year)))
-  } catch {
-    throw new UserNotFoundError(username)
-  }
+  return $('.js-year-link')
+    .get()
+    .map((a) => ({ year: parseInt($(a).text().trim()) }))
+    .filter((link) => (years === 'all' ? true : years.includes(link.year)))
 }
 
 /**
@@ -60,7 +61,14 @@ async function scrapeYear(
       ? `https://github.com/users/${username}/contributions`
       : `https://github.com/users/${username}/contributions?tab=overview&from=${year}-12-01&to=${year}-12-31`
 
-  const $ = await fromURL(url, { requestOptions: requestOptions(username) })
+  const $ = await fromURL(url, {
+    requestOptions: requestOptions(username),
+  }).catch((error: { statusCode: number }) => {
+    if (error.statusCode === 404) {
+      throw new UserNotFoundError(username)
+    }
+    throw error
+  })
 
   const days = $('.js-calendar-graph-table .ContributionCalendar-day')
   const sortedDays = days.get().sort((a, b) => {

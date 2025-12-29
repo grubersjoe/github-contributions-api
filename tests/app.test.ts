@@ -82,21 +82,24 @@ describe('The :username endpoint', () => {
         })
       }))
 
-  test('returns 404 if the user cannot be found', () => {
-    const nonExistingUser = '43b83cb5-2d8f-44d3-b01c-98a73af7a15f'
+  test.each([[''], ['y=last']])(
+    'returns 404 if the user cannot be found for query %s',
+    (y) => {
+      const nonExistingUser = '43b83cb5-2d8f-44d3-b01c-98a73af7a15f'
 
-    return request(app)
-      .get(`/${version}/${nonExistingUser}`)
-      .expect(404)
-      .expect(({ body }) => {
-        expect(body).toStrictEqual({
-          error: `GitHub user "${nonExistingUser}" not found.`,
+      return request(app)
+        .get(`/${version}/${nonExistingUser}?${y}`)
+        .expect(404)
+        .expect(({ body }) => {
+          expect(body).toStrictEqual({
+            error: `GitHub user "${nonExistingUser}" not found.`,
+          })
         })
-      })
-  })
+    },
+  )
 
   test.each([['y='], ['y=invalid'], ['y=2020abc'], ['y=abc2020']])(
-    'returns 400 for invalid y query %s',
+    'returns 400 for invalid query %s',
     (y) =>
       request(app)
         .get(`/${version}/${username}?${y}`)
