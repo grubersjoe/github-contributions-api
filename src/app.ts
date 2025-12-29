@@ -24,7 +24,7 @@ app.get(`/${version}`, (_, res) => {
 })
 app.use(`/${version}`, router)
 
-const errorHandler: ErrorRequestHandler = (error, _req, res, next) => {
+const errorHandler: ErrorRequestHandler = (error: unknown, req, res, next) => {
   if (error instanceof ZodError) {
     res.status(400).json({
       error: 'Invalid request',
@@ -37,7 +37,7 @@ const errorHandler: ErrorRequestHandler = (error, _req, res, next) => {
     return
   }
 
-  console.error(error)
+  console.error({ url: req.url, error })
 
   if (error instanceof Error) {
     res.status(500).json({ error: error.message })
