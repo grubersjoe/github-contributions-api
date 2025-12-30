@@ -1,4 +1,4 @@
-import { fromURL } from 'cheerio'
+import { fromURL, CheerioRequestOptions } from 'cheerio'
 
 import { Element, isText } from 'domhandler'
 import { ReqQuery } from './router'
@@ -81,15 +81,7 @@ const scrapeYear = async (
       ? `https://github.com/users/${username}/contributions`
       : `https://github.com/users/${username}/contributions?tab=overview&from=${year}-12-01&to=${year}-12-31`
 
-  const $ = await fromURL(url, {
-    requestOptions: requestOptions(username),
-  }).catch((error: { statusCode: number }) => {
-    if (error.statusCode === 404) {
-      throw new UserNotFoundError(username)
-    }
-    throw error
-  })
-
+  const $ = await fromURL(url, requestOptions(username))
   const days = $('.js-calendar-graph-table .ContributionCalendar-day')
   const sortedDays = days.get().sort((a, b) => {
     const dateA = a.attribs['data-date'] ?? ''
@@ -106,7 +98,7 @@ const scrapeYear = async (
     throw Error('Failed parsing total contributions count')
   }
 
-  const total = parseInt(totalMatch[0].replace(/,/g, ''))
+  const total = parseInt(totalMatch[0].replaceAll(',', ''))
 
   // Required for contribution count
   const tooltipsByDayId = $('.js-calendar-graph tool-tip')
@@ -197,15 +189,7 @@ const scrapeYearLinks = async (
   years: 'all' | Array<number>,
 ) => {
   const url = `https://github.com/${username}?action=show&controller=profiles&tab=contributions&user_id=${username}`
-
-  const $ = await fromURL(url, {
-    requestOptions: requestOptions(username),
-  }).catch((error: { statusCode: number }) => {
-    if (error.statusCode === 404) {
-      throw new UserNotFoundError(username)
-    }
-    throw error
-  })
+  const $ = await fromURL(url, requestOptions(username))
 
   return $('.js-year-link')
     .get()
@@ -213,16 +197,13 @@ const scrapeYearLinks = async (
     .filter((link) => (years === 'all' ? true : years.includes(link.year)))
 }
 
-const requestOptions = (username: string) => ({
-  method: 'GET',
-  headers: {
-    referer: `https://github.com/${username}`,
-    'x-requested-with': 'XMLHttpRequest',
+const requestOptions = (username: string): CheerioRequestOptions => ({
+  requestOptions: {
+    method: 'GET',
+    headers: {
+      accept: 'text/html',
+      referer: `https://github.com/${username}`,
+      'x-requested-with': 'XMLHttpRequest',
+    },
   },
 })
-
-export class UserNotFoundError extends Error {
-  constructor(username: string) {
-    super(`GitHub user "${username}" not found.`)
-  }
-}

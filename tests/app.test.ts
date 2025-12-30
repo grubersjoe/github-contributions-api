@@ -1,6 +1,6 @@
 import { Server } from 'http'
 import request from 'supertest'
-import { app, version } from '../src/app'
+import { app, version, HTTPError } from '../src/app'
 import { cache } from '../src/cache'
 import * as github from '../src/github'
 import { Response } from '../src/github'
@@ -83,10 +83,12 @@ describe('The :username endpoint', () => {
 
   test.each([[''], ['y=last']])(
     'returns 404 if the user cannot be found for query %s',
-    (y) => {
+    async (y) => {
       const nonExistingUser = '43b83cb5-2d8f-44d3-b01c-98a73af7a15f'
 
-      return request(app)
+      const logSpy = jest.spyOn(global.console, 'error')
+
+      await request(app)
         .get(`/${version}/${nonExistingUser}?${y}`)
         .expect(404)
         .expect(({ body }) => {
@@ -94,6 +96,8 @@ describe('The :username endpoint', () => {
             error: `GitHub user "${nonExistingUser}" not found.`,
           })
         })
+
+      expect(logSpy).not.toHaveBeenCalled()
     },
   )
 
@@ -167,22 +171,29 @@ describe('The :username endpoint', () => {
     expect(scrapeContributionsSpy).toHaveBeenCalledTimes(1)
   })
 
-  test('returns 500 for errors', () => {
-    const scrapeContributionsMock = jest.spyOn(github, 'scrapeContributions')
+  test.each([[new HTTPError(500, '💥')], [new Error('💥')]])(
+    'returns 500 for errors and writes log',
+    async (err) => {
+      const scrapeContributionsMock = jest.spyOn(github, 'scrapeContributions')
 
-    scrapeContributionsMock.mockImplementation(() => {
-      throw new Error('unexpected error')
-    })
-
-    return request(app)
-      .get(`/${version}/${username}`)
-      .expect(500)
-      .expect(({ body }) => {
-        expect(body).toStrictEqual({
-          error: `unexpected error`,
-        })
+      scrapeContributionsMock.mockImplementation(() => {
+        throw err
       })
-  })
+
+      const logSpy = jest.spyOn(global.console, 'error')
+
+      await request(app)
+        .get(`/${version}/${username}`)
+        .expect(500)
+        .expect(({ body }) => {
+          expect(body).toStrictEqual({
+            error: '💥',
+          })
+        })
+
+      expect(logSpy).toHaveBeenCalledTimes(1)
+    },
+  )
 
   test('caches responses', async () =>
     request(app)

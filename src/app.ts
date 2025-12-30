@@ -38,12 +38,18 @@ const errorHandler: ErrorRequestHandler = (error: unknown, req, res, next) => {
     return
   }
 
-  console.error({ url: req.url, error })
+  if (isHTTPError(error)) {
+    if (error.statusCode >= 500) {
+      console.error({ url: req.url, error })
+    }
 
-  if (error instanceof Error) {
-    res.status(500).json({ error: error.message })
+    res.status(error.statusCode).json({ error: error.message })
   } else {
-    res.status(500).json({ error: 'Internal' })
+    console.error({ url: req.url, error })
+
+    res
+      .status(500)
+      .json({ error: error instanceof Error ? error.message : 'Internal' })
   }
 
   next()
@@ -51,3 +57,15 @@ const errorHandler: ErrorRequestHandler = (error: unknown, req, res, next) => {
 
 // Lastly, override the default Express.js error handler.
 app.use(errorHandler)
+
+export class HTTPError extends Error {
+  readonly statusCode: number
+
+  constructor(statusCode: number, message: string) {
+    super(message)
+    this.statusCode = statusCode
+  }
+}
+
+export const isHTTPError = (error: unknown): error is HTTPError =>
+  error instanceof Error && Object.hasOwnProperty.call(error, 'statusCode')

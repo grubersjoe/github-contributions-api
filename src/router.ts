@@ -1,12 +1,8 @@
 import { type Request, Router } from 'express'
 import { z } from 'zod'
 import { ageInSeconds, cache, cacheTTL } from './cache'
-import {
-  NestedResponse,
-  Response,
-  scrapeContributions,
-  UserNotFoundError,
-} from './github'
+import { NestedResponse, Response, scrapeContributions } from './github'
+import { isHTTPError, HTTPError } from './app'
 
 export const router = Router()
 
@@ -66,7 +62,7 @@ type Req = Request<
   ReqQuery
 >
 
-router.get(`/:username`, async (req: Req, res, next) => {
+router.get(`/:username`, async (req: Req, res) => {
   const { username } = routeSchema.parse(req.params)
   const query = querySchema.parse(req.query)
 
@@ -83,24 +79,20 @@ router.get(`/:username`, async (req: Req, res, next) => {
     }
   }
 
-  try {
-    const response = await scrapeContributions(username, query)
+  const response = await scrapeContributions(username, query).catch(
+    (error: unknown) => {
+      if (isHTTPError(error) && error.statusCode === 404) {
+        throw new HTTPError(404, `GitHub user "${username}" not found.`)
+      }
+      throw error
+    },
+  )
 
-    cache.put(cacheKey, { ts: Date.now(), response }, cacheTTL)
-    res.setHeader('age', 0)
-    res.setHeader('x-cache', 'MISS')
+  cache.put(cacheKey, { ts: Date.now(), response }, cacheTTL)
+  res.setHeader('age', 0)
+  res.setHeader('x-cache', 'MISS')
 
-    res.json(response)
-  } catch (error) {
-    if (error instanceof UserNotFoundError) {
-      res.status(404).send({
-        error: error.message,
-      })
-      return
-    }
-
-    next(error)
-  }
+  res.json(response)
 })
 
 const uniq = <T = unknown>(a: Array<T>) => [...new Set(a)]
