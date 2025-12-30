@@ -9,10 +9,6 @@ GitHub profile. This API is used by
 
 :warning: Results are cached for one hour!
 
-<a href="https://www.buymeacoffee.com/grubersjoe">
-  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px;" >
-</a>
-
 ## How to run
 
 ```shell
