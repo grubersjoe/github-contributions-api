@@ -13,6 +13,7 @@ export default defineConfig(
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       '@typescript-eslint/restrict-template-expressions': 'off',
       '@typescript-eslint/use-unknown-in-catch-callback-variable': 'off',
+      'func-style': 'error',
     },
     languageOptions: {
       globals: {

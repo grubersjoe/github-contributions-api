@@ -1,7 +1,7 @@
 import { fromURL } from 'cheerio'
 
 import { Element, isText } from 'domhandler'
-import { ReqQuery } from './api'
+import { ReqQuery } from './router'
 
 type Level = 0 | 1 | 2 | 3 | 4
 
@@ -27,35 +27,55 @@ export type NestedResponse = {
   contributions: Record<number, Record<number, Record<number, Contribution>>> // [y][m][d]
 }
 
-/**
- * @throws UserNotFoundError
- */
-async function scrapeYearLinks(username: string, years: 'all' | Array<number>) {
-  const url = `https://github.com/${username}?action=show&controller=profiles&tab=contributions&user_id=${username}`
+export const scrapeContributions = async (
+  username: string,
+  query: ReqQuery,
+): Promise<Response | NestedResponse> => {
+  let requests = []
 
-  const $ = await fromURL(url, {
-    requestOptions: requestOptions(username),
-  }).catch((error: { statusCode: number }) => {
-    if (error.statusCode === 404) {
-      throw new UserNotFoundError(username)
+  if (query.y === 'last') {
+    requests.push(scrapeYear(username, 'lastYear', query.format))
+  } else {
+    const yearLinks = await scrapeYearLinks(username, query.y)
+    requests = yearLinks.map((link) =>
+      scrapeYear(username, link.year, query.format),
+    )
+  }
+
+  return Promise.all(requests).then((contributions) => {
+    if (query.format === 'nested') {
+      return (contributions as Array<NestedResponse>).reduce(
+        (resp, curr) => ({
+          total: { ...resp.total, ...curr.total },
+          contributions: { ...resp.contributions, ...curr.contributions },
+        }),
+        {
+          total: {},
+          contributions: {},
+        },
+      )
     }
-    throw error
-  })
 
-  return $('.js-year-link')
-    .get()
-    .map((a) => ({ year: parseInt($(a).text().trim()) }))
-    .filter((link) => (years === 'all' ? true : years.includes(link.year)))
+    return (contributions as Array<Response>).reduce(
+      (resp, curr) => {
+        return {
+          total: { ...resp.total, ...curr.total },
+          contributions: [...resp.contributions, ...curr.contributions],
+        }
+      },
+      {
+        total: {},
+        contributions: [],
+      },
+    )
+  })
 }
 
-/**
- * @throws Error if scraping of GitHub profile fails
- */
-async function scrapeYear(
+const scrapeYear = async (
   username: string,
   year: number | 'lastYear',
   format?: 'nested',
-): Promise<Response | NestedResponse> {
+): Promise<Response | NestedResponse> => {
   const url =
     year === 'lastYear'
       ? `https://github.com/users/${username}/contributions`
@@ -172,51 +192,25 @@ const parseDay = (day: Element, tooltipsByDayId: Record<string, Element>) => {
   }
 }
 
-/**
- * @throws UserNotFoundError
- */
-export async function scrapeContributions(
+const scrapeYearLinks = async (
   username: string,
-  query: ReqQuery,
-): Promise<Response | NestedResponse> {
-  let requests = []
+  years: 'all' | Array<number>,
+) => {
+  const url = `https://github.com/${username}?action=show&controller=profiles&tab=contributions&user_id=${username}`
 
-  if (query.y === 'last') {
-    requests.push(scrapeYear(username, 'lastYear', query.format))
-  } else {
-    const yearLinks = await scrapeYearLinks(username, query.y)
-    requests = yearLinks.map((link) =>
-      scrapeYear(username, link.year, query.format),
-    )
-  }
-
-  return Promise.all(requests).then((contributions) => {
-    if (query.format === 'nested') {
-      return (contributions as Array<NestedResponse>).reduce(
-        (resp, curr) => ({
-          total: { ...resp.total, ...curr.total },
-          contributions: { ...resp.contributions, ...curr.contributions },
-        }),
-        {
-          total: {},
-          contributions: {},
-        },
-      )
+  const $ = await fromURL(url, {
+    requestOptions: requestOptions(username),
+  }).catch((error: { statusCode: number }) => {
+    if (error.statusCode === 404) {
+      throw new UserNotFoundError(username)
     }
-
-    return (contributions as Array<Response>).reduce(
-      (resp, curr) => {
-        return {
-          total: { ...resp.total, ...curr.total },
-          contributions: [...resp.contributions, ...curr.contributions],
-        }
-      },
-      {
-        total: {},
-        contributions: [],
-      },
-    )
+    throw error
   })
+
+  return $('.js-year-link')
+    .get()
+    .map((a) => ({ year: parseInt($(a).text().trim()) }))
+    .filter((link) => (years === 'all' ? true : years.includes(link.year)))
 }
 
 const requestOptions = (username: string) => ({

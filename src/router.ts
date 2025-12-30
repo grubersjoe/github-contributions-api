@@ -1,4 +1,4 @@
-import express from 'express'
+import { type Request, Router } from 'express'
 import { z } from 'zod'
 import { ageInSeconds, cache, cacheTTL } from './cache'
 import {
@@ -7,6 +7,8 @@ import {
   scrapeContributions,
   UserNotFoundError,
 } from './github'
+
+export const router = Router()
 
 const routeSchema = z.object({
   username: z.string().min(1),
@@ -57,14 +59,12 @@ type ErrorResponse = {
   }>
 }
 
-type Req = express.Request<
+type Req = Request<
   ReqRouteParams,
   Response | NestedResponse | ErrorResponse,
   Record<string, never>,
   ReqQuery
 >
-
-export const router = express.Router()
 
 router.get(`/:username`, async (req: Req, res, next) => {
   const { username } = routeSchema.parse(req.params)

@@ -2,7 +2,7 @@ import compression from 'compression'
 import cors from 'cors'
 import express, { ErrorRequestHandler } from 'express'
 import { ZodError } from 'zod'
-import { router } from './api'
+import { router } from './router'
 
 export const version = 'v4'
 
@@ -22,6 +22,7 @@ app.get('/', (_req, res) => {
 app.get(`/${version}`, (_, res) => {
   res.redirect('/')
 })
+
 app.use(`/${version}`, router)
 
 const errorHandler: ErrorRequestHandler = (error: unknown, req, res, next) => {

@@ -14,7 +14,7 @@ const server = app.listen(port, (error) => {
   console.log(`Server listening on http://localhost:${port}`)
 })
 
-function shutdown(signal: NodeJS.Signals) {
+const shutdown = (signal: NodeJS.Signals) => {
   server.closeAllConnections()
   server.close(() => {
     console.log(`${signal} - Server closed.`)
