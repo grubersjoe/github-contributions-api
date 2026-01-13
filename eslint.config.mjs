@@ -11,6 +11,7 @@ export default defineConfig(
     rules: {
       '@typescript-eslint/array-type': ['error', { default: 'generic' }],
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
+      '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/restrict-template-expressions': 'off',
       '@typescript-eslint/use-unknown-in-catch-callback-variable': 'off',
       'func-style': 'error',

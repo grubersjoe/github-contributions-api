@@ -195,41 +195,77 @@ describe('The :username endpoint', () => {
     },
   )
 
-  test('caches responses', async () =>
-    request(app)
+  test('caches responses', async () => {
+    await request(app)
       .get(`/${version}/${username}?y=2020`)
       .expect(200)
       .expect(({ headers }) => {
         expect(Number(headers.age)).toBe(0)
         expect(headers['x-cache']).toBe('MISS')
       })
-      .then(() => new Promise((resolve) => setTimeout(resolve, 1000)))
-      .then(() =>
-        request(app)
-          .get(`/${version}/${username}?y=2020`)
-          .expect(200)
-          .expect(({ headers }) => {
-            expect(Number(headers.age)).toBeGreaterThanOrEqual(1)
-            expect(headers['x-cache']).toBe('HIT')
-          }),
-      ))
 
-  test('ignores cache for cache-control: no-cache', async () =>
-    request(app)
+    // ensure the age header changes
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    await request(app)
+      .get(`/${version}/${username}?y=2020`)
+      .expect(200)
+      .expect(({ headers }) => {
+        expect(Number(headers.age)).toBeGreaterThanOrEqual(1)
+        expect(headers['x-cache']).toBe('HIT')
+      })
+  })
+
+  test('ignores cache for cache-control: no-cache', async () => {
+    await request(app)
       .get(`/${version}/${username}?y=2020`)
       .expect(200)
       .expect(({ headers }) => {
         expect(Number(headers.age)).toBe(0)
         expect(headers['x-cache']).toBe('MISS')
       })
-      .then(() =>
-        request(app)
-          .get(`/${version}/${username}?y=2020`)
-          .set('cache-control', 'no-cache')
-          .expect(200)
-          .expect(({ headers }) => {
-            expect(Number(headers.age)).toBe(0)
-            expect(headers['x-cache']).toBe('MISS')
-          }),
-      ))
+
+    await request(app)
+      .get(`/${version}/${username}?y=2020`)
+      .set('cache-control', 'no-cache')
+      .expect(200)
+      .expect(({ headers }) => {
+        expect(Number(headers.age)).toBe(0)
+        expect(headers['x-cache']).toBe('MISS')
+      })
+  })
+
+  test('enforces rate limit for cache-control: no-cache', async () => {
+    process.env.NODE_ENV = 'production' // enable rate limits
+    app.set('rate_limit', 1)
+
+    await request(app)
+      .get(`/${version}/${username}?y=2020`)
+      .set('cache-control', 'no-cache')
+      .expect(200)
+
+    await request(app)
+      .get(`/${version}/${username}?y=2020`)
+      .set('cache-control', 'no-cache')
+      .expect(429)
+      .expect(({ body }) => {
+        expect(body).toEqual({
+          error: 'Too many requests, please try again later.',
+        })
+      })
+
+    process.env.NODE_ENV = 'test'
+    app.disable('rate_limit')
+  })
+
+  test('has no rate limit for cached requests', async () => {
+    process.env.NODE_ENV = 'production' // enable rate limits
+    app.set('rate_limit', 1)
+
+    await request(app).get(`/${version}/${username}?y=2020`).expect(200)
+    await request(app).get(`/${version}/${username}?y=2020`).expect(200)
+
+    process.env.NODE_ENV = 'test'
+    app.disable('rate_limit')
+  })
 })
