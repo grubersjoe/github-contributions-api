@@ -2,9 +2,23 @@ import { type Request, Router } from 'express'
 import { z } from 'zod'
 import { ageInSeconds, cache, cacheTTL } from './cache'
 import { NestedResponse, Response, scrapeContributions } from './github'
-import { isHTTPError, HTTPError } from './app'
+import { isHTTPError, HTTPError, app } from './app'
+import rateLimit from 'express-rate-limit'
 
 export const router = Router()
+
+router.use(
+  rateLimit({
+    windowMs: 60 * 1000, // 1 minute]
+    limit: () => app.get('rate_limit') ?? 12,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    message: { error: 'Too many requests, please try again later.' },
+    skip: (req) =>
+      req.header('cache-control') !== 'no-cache' ||
+      process.env.NODE_ENV === 'test',
+  }),
+)
 
 const routeSchema = z.object({
   username: z.string().min(1),
