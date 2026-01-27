@@ -36,15 +36,15 @@
     "node"
   ],
   "dependencies": {
-    "cheerio": "^1.1.2",
+    "cheerio": "^1.2.0",
     "compression": "^1.8.1",
     "console-stamp": "^3.1.2",
-    "cors": "^2.8.4",
+    "cors": "^2.8.6",
     "domhandler": "^5.0.3",
     "express": "^5.2.1",
     "express-rate-limit": "^8.2.1",
     "memory-cache": "^0.2.0",
-    "zod": "^4.3.5"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.28.6",
@@ -58,15 +58,15 @@
     "@types/node": "^22.19.7",
     "@types/supertest": "^6.0.3",
     "eslint": "^9.39.2",
-    "globals": "^17.0.0",
+    "globals": "^17.1.0",
     "husky": "^9.1.7",
     "jest": "^30.2.0",
     "nodemon": "^3.1.11",
-    "prettier": "^3.8.0",
+    "prettier": "^3.8.1",
     "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.53.1"
+    "typescript-eslint": "^8.54.0"
   },
   "prettier": {
     "semi": false,
