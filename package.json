@@ -47,7 +47,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.29.0",
+    "@babel/preset-env": "^7.29.2",
     "@babel/preset-typescript": "^7.28.5",
     "@eslint/js": "^10.0.1",
     "@types/compression": "^1.8.1",
@@ -66,7 +66,7 @@
     "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.57.0"
+    "typescript-eslint": "^8.57.1"
   },
   "prettier": {
     "semi": false,
