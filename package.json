@@ -40,7 +40,7 @@
     "compression": "^1.8.1",
     "console-stamp": "^3.1.2",
     "cors": "^2.8.6",
-    "domhandler": "^5.0.3",
+    "domhandler": "^6.0.1",
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.1",
     "memory-cache": "^0.2.0",
