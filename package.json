@@ -42,7 +42,7 @@
     "cors": "^2.8.6",
     "domhandler": "^5.0.3",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.3.1",
+    "express-rate-limit": "^8.3.2",
     "memory-cache": "^0.2.0",
     "zod": "^4.3.6"
   },
@@ -57,7 +57,7 @@
     "@types/memory-cache": "^0.2.6",
     "@types/node": "^22.19.15",
     "@types/supertest": "^7.2.0",
-    "eslint": "^10.0.3",
+    "eslint": "^10.1.0",
     "globals": "^17.4.0",
     "husky": "^9.1.7",
     "jest": "^30.3.0",
@@ -66,7 +66,7 @@
     "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.57.1"
+    "typescript-eslint": "^8.58.0"
   },
   "prettier": {
     "semi": false,
