@@ -19,7 +19,7 @@
     "prepare": "husky",
     "prestart": "npm run build",
     "start": "node build/server.js",
-    "test": "jest",
+    "test": "vitest run",
     "typecheck": "tsc"
   },
   "repository": {
@@ -40,34 +40,31 @@
     "compression": "^1.8.1",
     "console-stamp": "^3.1.2",
     "cors": "^2.8.6",
-    "domhandler": "^5.0.3",
+    "domhandler": "^6.0.1",
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.2",
     "memory-cache": "^0.2.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.29.2",
-    "@babel/preset-typescript": "^7.28.5",
     "@eslint/js": "^10.0.1",
     "@tsconfig/bases": "^1.0.23",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
-    "@types/jest": "^30.0.0",
     "@types/memory-cache": "^0.2.6",
     "@types/node": "^22.19.17",
     "@types/supertest": "^7.2.0",
     "eslint": "^10.2.0",
     "globals": "^17.5.0",
     "husky": "^9.1.7",
-    "jest": "^30.3.0",
     "nodemon": "^3.1.14",
     "prettier": "^3.8.2",
     "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.2",
-    "typescript-eslint": "^8.58.1"
+    "typescript-eslint": "^8.58.1",
+    "vitest": "^4.1.4"
   },
   "prettier": {
     "semi": false,

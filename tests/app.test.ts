@@ -1,7 +1,6 @@
-import { Server } from 'http'
 import request from 'supertest'
-import { app, HTTPError, version } from '../src/app'
-import { cache } from '../src/cache'
+import { afterEach, describe, expect, test, vi } from 'vitest'
+import { createApp, HTTPError, version } from '../src/app'
 import * as github from '../src/github'
 import { Response } from '../src/github'
 import testDataMultipleYears from './fixtures/grubersjoe-2017-2018.json'
@@ -11,21 +10,15 @@ import testData from './fixtures/grubersjoe-2018.json'
 const username = 'grubersjoe'
 
 describe('The :username endpoint', () => {
-  let server: Server
+  let app = createApp()
 
-  beforeEach((done) => {
-    server = app.listen(done)
+  afterEach(() => {
+    vi.restoreAllMocks()
+    app = createApp()
   })
 
-  afterEach((done) => {
-    jest.restoreAllMocks()
-    cache.clear()
-    server.closeAllConnections()
-    server.close(done)
-  })
-
-  test.each([[''], ['y=all']])('returns all data for query %s', (y) =>
-    request(app)
+  test.each([[''], ['y=all']])('returns all data for query %s', async (y) => {
+    await request(app)
       .get(`/${version}/${username}?${y}`)
       .expect(200)
       .expect(({ body }: { body: Response }) => {
@@ -34,8 +27,8 @@ describe('The :username endpoint', () => {
         for (const count of Object.values(body.total)) {
           expect(typeof count).toBe('number')
         }
-      }),
-  )
+      })
+  })
 
   test('returns data for a single year', () =>
     request(app)
@@ -86,7 +79,7 @@ describe('The :username endpoint', () => {
     async (y) => {
       const nonExistingUser = '43b83cb5-2d8f-44d3-b01c-98a73af7a15f'
 
-      const logSpy = jest.spyOn(global.console, 'error')
+      const logSpy = vi.spyOn(global.console, 'error')
 
       await request(app)
         .get(`/${version}/${nonExistingUser}?${y}`)
@@ -103,8 +96,8 @@ describe('The :username endpoint', () => {
 
   test.each([['y='], ['y=invalid'], ['y=2020abc'], ['y=abc2020']])(
     'returns 400 for invalid query %s',
-    (y) =>
-      request(app)
+    async (y) => {
+      await request(app)
         .get(`/${version}/${username}?${y}`)
         .expect(400)
         .expect(({ body }) => {
@@ -119,14 +112,15 @@ describe('The :username endpoint', () => {
               },
             ],
           })
-        }),
+        })
+    },
   )
 
   test.each([['format=invalid'], ['format=']])(
     'returns 400 for invalid format query %s',
-    () =>
-      request(app)
-        .get(`/${version}/${username}?format=invalid`)
+    async (y) => {
+      await request(app)
+        .get(`/${version}/${username}?${y}`)
         .expect(400)
         .expect(({ body }) => {
           expect(body).toStrictEqual({
@@ -139,7 +133,8 @@ describe('The :username endpoint', () => {
               },
             ],
           })
-        }),
+        })
+    },
   )
 
   test('combines all validation errors', () =>
@@ -166,7 +161,7 @@ describe('The :username endpoint', () => {
       }))
 
   test('skips duplicate y parameters', async () => {
-    const scrapeContributionsSpy = jest.spyOn(github, 'scrapeContributions')
+    const scrapeContributionsSpy = vi.spyOn(github, 'scrapeContributions')
     await request(app).get(`/${version}/${username}?y=2020&y=2020`).expect(200)
     expect(scrapeContributionsSpy).toHaveBeenCalledTimes(1)
   })
@@ -174,13 +169,13 @@ describe('The :username endpoint', () => {
   test.each([[new HTTPError(500, '💥')], [new Error('💥')]])(
     'returns 500 for errors and writes log',
     async (err) => {
-      const scrapeContributionsMock = jest.spyOn(github, 'scrapeContributions')
+      const scrapeContributionsMock = vi.spyOn(github, 'scrapeContributions')
 
       scrapeContributionsMock.mockImplementation(() => {
         throw err
       })
 
-      const logSpy = jest.spyOn(global.console, 'error')
+      const logSpy = vi.spyOn(global.console, 'error')
 
       await request(app)
         .get(`/${version}/${username}`)
@@ -236,6 +231,8 @@ describe('The :username endpoint', () => {
   })
 
   test('enforces rate limit for cache-control: no-cache', async () => {
+    const originalEnv = process.env.NODE_ENV
+
     process.env.NODE_ENV = 'production' // enable rate limits
     app.set('rate_limit', 1)
 
@@ -256,9 +253,13 @@ describe('The :username endpoint', () => {
 
     process.env.NODE_ENV = 'test'
     app.disable('rate_limit')
+
+    process.env.NODE_ENV = originalEnv
   })
 
   test('has no rate limit for cached requests', async () => {
+    const originalEnv = process.env.NODE_ENV
+
     process.env.NODE_ENV = 'production' // enable rate limits
     app.set('rate_limit', 1)
 
@@ -267,5 +268,7 @@ describe('The :username endpoint', () => {
 
     process.env.NODE_ENV = 'test'
     app.disable('rate_limit')
+
+    process.env.NODE_ENV = originalEnv
   })
 })

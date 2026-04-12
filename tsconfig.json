@@ -3,7 +3,6 @@
   "compilerOptions": {
     "noEmit": true,
     "noPropertyAccessFromIndexSignature": false,
-    "noUncheckedIndexedAccess": false,
-    "types": ["jest"]
+    "noUncheckedIndexedAccess": false
   }
 }

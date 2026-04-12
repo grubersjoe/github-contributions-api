@@ -1,24 +1,62 @@
-import { type Request, Router } from 'express'
-import { z } from 'zod'
-import { ageInSeconds, cache, cacheTTL } from './cache'
-import { NestedResponse, Response, scrapeContributions } from './github'
-import { isHTTPError, HTTPError, app } from './app'
+import { Application, type Request, Router } from 'express'
 import rateLimit from 'express-rate-limit'
+import { z } from 'zod'
+import { HTTPError, isHTTPError } from './app'
+import { ageInSeconds, createCache } from './cache'
+import { NestedResponse, Response, scrapeContributions } from './github'
 
-export const router = Router()
+export const createRouter = (app: Application) => {
+  const router = Router()
+  const cache = createCache()
 
-router.use(
-  rateLimit({
-    windowMs: 60 * 1000, // 1 minute]
-    limit: () => app.get('rate_limit') ?? 12,
-    standardHeaders: 'draft-8',
-    legacyHeaders: false,
-    message: { error: 'Too many requests, please try again later.' },
-    skip: (req) =>
-      req.header('cache-control') !== 'no-cache' ||
-      process.env.NODE_ENV === 'test',
-  }),
-)
+  router.use(
+    rateLimit({
+      windowMs: 60 * 1000, // 1 minute]
+      limit: () => app.get('rate_limit') ?? 12,
+      standardHeaders: 'draft-8',
+      legacyHeaders: false,
+      message: { error: 'Too many requests, please try again later.' },
+      skip: (req) =>
+        req.header('cache-control') !== 'no-cache' ||
+        process.env.NODE_ENV === 'test',
+    }),
+  )
+
+  router.get(`/:username`, async (req: Req, res) => {
+    const { username } = routeSchema.parse(req.params)
+    const query = querySchema.parse(req.query)
+
+    const cacheKey = `${username}-${JSON.stringify(query)}`
+
+    if (req.header('cache-control') !== 'no-cache') {
+      const cached = cache.get(cacheKey)
+
+      if (cached !== null) {
+        res.setHeader('age', ageInSeconds(cached))
+        res.setHeader('x-cache', 'HIT')
+        res.json(cached.response)
+        return
+      }
+    }
+
+    const response = await scrapeContributions(username, query).catch(
+      (error: unknown) => {
+        if (isHTTPError(error) && error.statusCode === 404) {
+          throw new HTTPError(404, `GitHub user "${username}" not found.`)
+        }
+        throw error
+      },
+    )
+
+    cache.put(cacheKey, { ts: Date.now(), response }, 1000 * 60 * 60) // one hour
+    res.setHeader('age', 0)
+    res.setHeader('x-cache', 'MISS')
+
+    res.json(response)
+  })
+
+  return router
+}
 
 const routeSchema = z.object({
   username: z.string().min(1),
@@ -75,38 +113,5 @@ type Req = Request<
   Record<string, never>,
   ReqQuery
 >
-
-router.get(`/:username`, async (req: Req, res) => {
-  const { username } = routeSchema.parse(req.params)
-  const query = querySchema.parse(req.query)
-
-  const cacheKey = `${username}-${JSON.stringify(query)}`
-
-  if (req.header('cache-control') !== 'no-cache') {
-    const cached = cache.get(cacheKey)
-
-    if (cached !== null) {
-      res.setHeader('age', ageInSeconds(cached))
-      res.setHeader('x-cache', 'HIT')
-      res.json(cached.response)
-      return
-    }
-  }
-
-  const response = await scrapeContributions(username, query).catch(
-    (error: unknown) => {
-      if (isHTTPError(error) && error.statusCode === 404) {
-        throw new HTTPError(404, `GitHub user "${username}" not found.`)
-      }
-      throw error
-    },
-  )
-
-  cache.put(cacheKey, { ts: Date.now(), response }, cacheTTL)
-  res.setHeader('age', 0)
-  res.setHeader('x-cache', 'MISS')
-
-  res.json(response)
-})
 
 const uniq = <T = unknown>(a: Array<T>) => [...new Set(a)]
