@@ -4,6 +4,6 @@ export default defineConfig({
   test: {
     reporters: 'verbose',
     silent: true,
-    testTimeout: 8000,
+    testTimeout: 5000,
   },
 })
