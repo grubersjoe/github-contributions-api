@@ -1,6 +1,6 @@
 import { Server } from 'http'
 import request from 'supertest'
-import { app, version, HTTPError } from '../src/app'
+import { app, HTTPError, version } from '../src/app'
 import { cache } from '../src/cache'
 import * as github from '../src/github'
 import { Response } from '../src/github'

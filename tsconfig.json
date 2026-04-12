@@ -1,17 +1,9 @@
 {
-  "include": ["src"],
+  "extends": ["@tsconfig/bases/strictest", "@tsconfig/bases/node22"],
   "compilerOptions": {
-    "allowJs": true,
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    "lib": ["ES2023"],
-    "module": "NodeNext",
-    "noImplicitOverride": true,
-    "outDir": "build",
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "sourceMap": true,
-    "strict": true,
-    "target": "ES2023"
+    "noEmit": true,
+    "noPropertyAccessFromIndexSignature": false,
+    "noUncheckedIndexedAccess": false,
+    "types": ["jest"]
   }
 }
