@@ -42,9 +42,9 @@
     "cors": "^2.8.6",
     "domhandler": "^6.0.1",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.4.1",
+    "express-rate-limit": "^8.5.1",
     "memory-cache": "^0.2.0",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -53,7 +53,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/memory-cache": "^0.2.6",
-    "@types/node": "^22.19.17",
+    "@types/node": "^22.19.19",
     "@types/supertest": "^7.2.0",
     "eslint": "^10.2.1",
     "globals": "^17.5.0",
