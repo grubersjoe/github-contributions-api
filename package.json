@@ -42,21 +42,21 @@
     "cors": "^2.8.6",
     "domhandler": "^6.0.1",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.5.1",
+    "express-rate-limit": "^8.5.2",
     "memory-cache": "^0.2.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@tsconfig/bases": "^1.0.23",
+    "@tsconfig/bases": "^1.0.24",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/memory-cache": "^0.2.6",
     "@types/node": "^22.19.19",
     "@types/supertest": "^7.2.0",
-    "eslint": "^10.2.1",
-    "globals": "^17.5.0",
+    "eslint": "^10.4.0",
+    "globals": "^17.6.0",
     "husky": "^9.1.7",
     "nodemon": "^3.1.14",
     "prettier": "^3.8.3",
@@ -64,7 +64,7 @@
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.1",
-    "vitest": "^4.1.5"
+    "vitest": "^4.1.6"
   },
   "prettier": {
     "semi": false,
