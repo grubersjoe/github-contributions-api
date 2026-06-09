@@ -55,8 +55,8 @@ importers:
         specifier: ^0.2.6
         version: 0.2.6
       '@types/node':
-        specifier: ^22.19.19
-        version: 22.19.19
+        specifier: ^22.19.20
+        version: 22.19.20
       '@types/supertest':
         specifier: ^7.2.0
         version: 7.2.0
@@ -80,7 +80,7 @@ importers:
         version: 7.2.2
       ts-node:
         specifier: ^10.9.2
-        version: 10.9.2(@types/node@22.19.19)(typescript@6.0.3)
+        version: 10.9.2(@types/node@22.19.20)(typescript@6.0.3)
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -89,7 +89,7 @@ importers:
         version: 8.60.1(eslint@10.4.1)(typescript@6.0.3)
       vitest:
         specifier: ^4.1.8
-        version: 4.1.8(@types/node@22.19.19)(vite@8.0.15(@types/node@22.19.19))
+        version: 4.1.8(@types/node@22.19.20)(vite@8.0.15(@types/node@22.19.20))
 
 packages:
 
@@ -355,8 +355,8 @@ packages:
   '@types/methods@1.1.4':
     resolution: {integrity: sha512-ymXWVrDiCxTBE3+RIrrP533E70eA+9qu7zdWoHuOmGujkYtzf4HQF96b8nwHLqhuf4ykX61IGRIB38CC6/sImQ==}
 
-  '@types/node@22.19.19':
-    resolution: {integrity: sha512-dyh/xO2Fh5bYrfWaaqGrRQQGkNdmYw6AmaAUvYeUMNTWQtvb796ikLdmTchRmOlOiIJ1TDXfWgVx1QkUlQ6Hew==}
+  '@types/node@22.19.20':
+    resolution: {integrity: sha512-6tELRwSDYWW9EdZhbeZmYGZ1/7Djkt+Ah3/ScEYT9cDord7UJzasR/4D3VONg9tQI5CDp+/CZC1AXj2pCFOvpw==}
 
   '@types/qs@6.15.1':
     resolution: {integrity: sha512-GZHUBZR9hckSUhrxmp1nG6NwdpM9fCunJwyThLW1X3AyHgd9IlHb6VANpQQqDr2o/qQp6McZ3y/IA2rVzKzSbw==}
@@ -1758,7 +1758,7 @@ snapshots:
   '@types/body-parser@1.19.6':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 22.19.19
+      '@types/node': 22.19.20
 
   '@types/chai@5.2.3':
     dependencies:
@@ -1768,17 +1768,17 @@ snapshots:
   '@types/compression@1.8.1':
     dependencies:
       '@types/express': 5.0.6
-      '@types/node': 22.19.19
+      '@types/node': 22.19.20
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 22.19.19
+      '@types/node': 22.19.20
 
   '@types/cookiejar@2.1.5': {}
 
   '@types/cors@2.8.19':
     dependencies:
-      '@types/node': 22.19.19
+      '@types/node': 22.19.20
 
   '@types/deep-eql@4.0.2': {}
 
@@ -1788,7 +1788,7 @@ snapshots:
 
   '@types/express-serve-static-core@5.1.1':
     dependencies:
-      '@types/node': 22.19.19
+      '@types/node': 22.19.20
       '@types/qs': 6.15.1
       '@types/range-parser': 1.2.7
       '@types/send': 1.2.1
@@ -1807,7 +1807,7 @@ snapshots:
 
   '@types/methods@1.1.4': {}
 
-  '@types/node@22.19.19':
+  '@types/node@22.19.20':
     dependencies:
       undici-types: 6.21.0
 
@@ -1817,18 +1817,18 @@ snapshots:
 
   '@types/send@1.2.1':
     dependencies:
-      '@types/node': 22.19.19
+      '@types/node': 22.19.20
 
   '@types/serve-static@2.2.0':
     dependencies:
       '@types/http-errors': 2.0.5
-      '@types/node': 22.19.19
+      '@types/node': 22.19.20
 
   '@types/superagent@8.1.10':
     dependencies:
       '@types/cookiejar': 2.1.5
       '@types/methods': 1.1.4
-      '@types/node': 22.19.19
+      '@types/node': 22.19.20
       form-data: 4.0.5
 
   '@types/supertest@7.2.0':
@@ -1936,13 +1936,13 @@ snapshots:
       chai: 6.2.2
       tinyrainbow: 3.1.0
 
-  '@vitest/mocker@4.1.8(vite@8.0.15(@types/node@22.19.19))':
+  '@vitest/mocker@4.1.8(vite@8.0.15(@types/node@22.19.20))':
     dependencies:
       '@vitest/spy': 4.1.8
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 8.0.15(@types/node@22.19.19)
+      vite: 8.0.15(@types/node@22.19.20)
 
   '@vitest/pretty-format@4.1.8':
     dependencies:
@@ -2925,14 +2925,14 @@ snapshots:
     dependencies:
       typescript: 6.0.3
 
-  ts-node@10.9.2(@types/node@22.19.19)(typescript@6.0.3):
+  ts-node@10.9.2(@types/node@22.19.20)(typescript@6.0.3):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.12
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 22.19.19
+      '@types/node': 22.19.20
       acorn: 8.16.0
       acorn-walk: 8.3.5
       arg: 4.1.3
@@ -2985,7 +2985,7 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite@8.0.15(@types/node@22.19.19):
+  vite@8.0.15(@types/node@22.19.20):
     dependencies:
       lightningcss: 1.32.0
       picomatch: 4.0.4
@@ -2993,13 +2993,13 @@ snapshots:
       rolldown: 1.0.3
       tinyglobby: 0.2.17
     optionalDependencies:
-      '@types/node': 22.19.19
+      '@types/node': 22.19.20
       fsevents: 2.3.3
 
-  vitest@4.1.8(@types/node@22.19.19)(vite@8.0.15(@types/node@22.19.19)):
+  vitest@4.1.8(@types/node@22.19.20)(vite@8.0.15(@types/node@22.19.20)):
     dependencies:
       '@vitest/expect': 4.1.8
-      '@vitest/mocker': 4.1.8(vite@8.0.15(@types/node@22.19.19))
+      '@vitest/mocker': 4.1.8(vite@8.0.15(@types/node@22.19.20))
       '@vitest/pretty-format': 4.1.8
       '@vitest/runner': 4.1.8
       '@vitest/snapshot': 4.1.8
@@ -3016,10 +3016,10 @@ snapshots:
       tinyexec: 1.2.4
       tinyglobby: 0.2.17
       tinyrainbow: 3.1.0
-      vite: 8.0.15(@types/node@22.19.19)
+      vite: 8.0.15(@types/node@22.19.20)
       why-is-node-running: 2.3.0
     optionalDependencies:
-      '@types/node': 22.19.19
+      '@types/node': 22.19.20
     transitivePeerDependencies:
       - msw
 
