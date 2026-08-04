@@ -42,7 +42,7 @@
     "cors": "^2.8.6",
     "domhandler": "^6.0.1",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.6.0",
+    "express-rate-limit": "^8.6.1",
     "memory-cache": "^0.2.0",
     "zod": "^4.4.3"
   },
@@ -56,7 +56,7 @@
     "@types/node": "^22.20.1",
     "@types/supertest": "^7.2.1",
     "eslint": "^10.8.0",
-    "globals": "^17.7.0",
+    "globals": "^17.8.0",
     "husky": "^9.1.7",
     "nodemon": "^3.1.14",
     "prettier": "^3.9.6",
