@@ -257,6 +257,29 @@ describe('The :username endpoint', () => {
     process.env.NODE_ENV = originalEnv
   })
 
+  test('enforces rate limit for uncached requests', async () => {
+    const originalEnv = process.env.NODE_ENV
+
+    process.env.NODE_ENV = 'production' // enable rate limits
+    app.set('rate_limit', 1)
+
+    await request(app).get(`/${version}/${username}?y=2020`).expect(200)
+
+    await request(app)
+      .get(`/${version}/torvalds?y=2020`)
+      .expect(429)
+      .expect(({ body }) => {
+        expect(body).toEqual({
+          error: 'Too many requests, please try again later.',
+        })
+      })
+
+    process.env.NODE_ENV = 'test'
+    app.disable('rate_limit')
+
+    process.env.NODE_ENV = originalEnv
+  })
+
   test('has no rate limit for cached requests', async () => {
     const originalEnv = process.env.NODE_ENV
 

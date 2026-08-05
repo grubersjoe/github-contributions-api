@@ -8,6 +8,7 @@ export const version = 'v4'
 
 export const createApp = () => {
   const app = express()
+  app.set('trust proxy', 1) // required to correctly resolve IP addresses for rate limiting
 
   app.use(cors())
   app.use(compression())

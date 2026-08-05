@@ -30,7 +30,8 @@ Send a GET request to the API in the following format:
 https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME
 ```
 
-And you will receive the complete GitHub contribution history of that user (total per year and for each day):
+And you will receive the complete GitHub contribution history of that user
+(total per year and for each day):
 
 ```json
 {
@@ -94,9 +95,9 @@ https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?format=nested
 
 ### Time selection
 
-Use the `y` query parameter to retrieve the data for a specific year, a
-set of years, the last year (GitHub's default view), or the data for all
-years (default when `y` parameter is omitted):
+Use the `y` query parameter to retrieve the data for a specific year, a set of
+years, the last year (GitHub's default view), or the data for all years (default
+when `y` parameter is omitted):
 
 ```shell
 https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?y=2020
@@ -170,8 +171,15 @@ type ErrorResponse = {
 }
 ```
 
+### Rate limiting
+
+Uncached requests are limited to 10 per 10 seconds per IP address.
+
 ### Caching
 
-Results are cached for one hour. The API returns the [`age`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Age) and the non-standard `x-cache: HIT | MISS` headers to provide more information about when the data was last scraped and if the cache was hit. You can enforce fresh data using the `cache-control: no-cache` header in the request, but please use this responsibly and not per default for every request.
-
-January 2026: Because some people _did_ use that header in every request, there is a rate limit of **12 requests per minute** for requests with `cache-control: no-cache` now.
+Results are cached for one hour. The API returns the
+[`age`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Age)
+and the non-standard `x-cache: HIT | MISS` headers to provide more information
+about when the data was last scraped and if the cache was hit. You can enforce
+fresh data using the `cache-control: no-cache` header in the request, but please
+use this responsibly and not per default for every request.

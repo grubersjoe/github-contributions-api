@@ -9,24 +9,39 @@ export const createRouter = (app: Application) => {
   const router = Router()
   const cache = createCache()
 
-  router.use(
-    rateLimit({
-      windowMs: 60 * 1000, // 1 minute]
-      limit: () => app.get('rate_limit') ?? 12,
-      standardHeaders: 'draft-8',
-      legacyHeaders: false,
-      message: { error: 'Too many requests, please try again later.' },
-      skip: (req) =>
-        req.header('cache-control') !== 'no-cache' ||
-        process.env.NODE_ENV === 'test',
-    }),
-  )
+  const limiter = rateLimit({
+    windowMs: 10 * 1000, // 10 seconds
+    limit: () => app.get('rate_limit') ?? 10,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    message: { error: 'Too many requests, please try again later.' },
 
-  router.get(`/:username`, async (req: Req, res) => {
+    // Rate-limit all uncached requests but ignore tests.
+    skip: (req) => {
+      if (process.env.NODE_ENV === 'test') {
+        return true
+      }
+
+      if (req.header('cache-control') === 'no-cache') {
+        return false
+      }
+
+      return Boolean(
+        cache.get(
+          getCacheKey(
+            routeSchema.parse(req.params).username,
+            querySchema.parse(req.query),
+          ),
+        ),
+      )
+    },
+  })
+
+  router.get(`/:username`, limiter, async (req: Req, res) => {
     const { username } = routeSchema.parse(req.params)
     const query = querySchema.parse(req.query)
 
-    const cacheKey = `${username}-${JSON.stringify(query)}`
+    const cacheKey = getCacheKey(username, query)
 
     if (req.header('cache-control') !== 'no-cache') {
       const cached = cache.get(cacheKey)
@@ -96,7 +111,7 @@ const querySchema = z.object({
 })
 
 type ReqRouteParams = z.infer<typeof routeSchema>
-export type ReqQuery = z.infer<typeof querySchema>
+export type ReqQuery = z.output<typeof querySchema>
 
 type ErrorResponse = {
   error: string
@@ -111,7 +126,10 @@ type Req = Request<
   ReqRouteParams,
   Response | NestedResponse | ErrorResponse,
   Record<string, never>,
-  ReqQuery
+  z.input<typeof querySchema>
 >
+
+const getCacheKey = (username: string, query: ReqQuery) =>
+  `${username}-${JSON.stringify(query)}`
 
 const uniq = <T = unknown>(a: Array<T>) => [...new Set(a)]
