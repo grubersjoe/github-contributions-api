@@ -1,11 +1,11 @@
 import request from 'supertest'
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { createApp, HTTPError, version } from '../src/app'
-import * as github from '../src/github'
-import { Response } from '../src/github'
-import testDataMultipleYears from './fixtures/grubersjoe-2017-2018.json'
-import testDataNested from './fixtures/grubersjoe-2018-nested.json'
-import testData from './fixtures/grubersjoe-2018.json'
+import { createApp, HTTPError, version } from './app'
+import * as github from './github'
+import { Response } from './github'
+import testDataMultipleYears from '../fixtures/grubersjoe-2017-2018.json'
+import testDataNested from '../fixtures/grubersjoe-2018-nested.json'
+import testData from '../fixtures/grubersjoe-2018.json'
 
 const username = 'grubersjoe'
 
@@ -75,7 +75,7 @@ describe('The :username endpoint', () => {
       }))
 
   test.each([[''], ['y=last']])(
-    'returns 404 if the user cannot be found for query %s',
+    'returns HTTP 404 if the user cannot be found for query %s',
     async (y) => {
       const nonExistingUser = '43b83cb5-2d8f-44d3-b01c-98a73af7a15f'
 
@@ -95,7 +95,7 @@ describe('The :username endpoint', () => {
   )
 
   test.each([['y='], ['y=invalid'], ['y=2020abc'], ['y=abc2020']])(
-    'returns 400 for invalid query %s',
+    'returns HTTP 400 for invalid query %s',
     async (y) => {
       await request(app)
         .get(`/${version}/${username}?${y}`)
@@ -117,7 +117,7 @@ describe('The :username endpoint', () => {
   )
 
   test.each([['format=invalid'], ['format=']])(
-    'returns 400 for invalid format query %s',
+    'returns HTTP 400 for invalid format query %s',
     async (y) => {
       await request(app)
         .get(`/${version}/${username}?${y}`)
@@ -163,17 +163,15 @@ describe('The :username endpoint', () => {
   test('skips duplicate y parameters', async () => {
     const scrapeContributionsSpy = vi.spyOn(github, 'scrapeContributions')
     await request(app).get(`/${version}/${username}?y=2020&y=2020`).expect(200)
-    expect(scrapeContributionsSpy).toHaveBeenCalledTimes(1)
+    expect(scrapeContributionsSpy).toHaveBeenCalledOnce()
   })
 
   test.each([[new HTTPError(500, '💥')], [new Error('💥')]])(
-    'returns 500 for errors and writes log',
+    'returns HTTP 500 for errors and writes log',
     async (err) => {
       const scrapeContributionsMock = vi.spyOn(github, 'scrapeContributions')
 
-      scrapeContributionsMock.mockImplementation(() => {
-        throw err
-      })
+      scrapeContributionsMock.mockRejectedValue(err)
 
       const logSpy = vi.spyOn(global.console, 'error')
 
@@ -182,11 +180,11 @@ describe('The :username endpoint', () => {
         .expect(500)
         .expect(({ body }) => {
           expect(body).toStrictEqual({
-            error: '💥',
+            error: `Failed to scrape contributions of "${username}"`,
           })
         })
 
-      expect(logSpy).toHaveBeenCalledTimes(1)
+      expect(logSpy).toHaveBeenCalledOnce()
     },
   )
 

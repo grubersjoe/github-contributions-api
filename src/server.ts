@@ -1,3 +1,5 @@
+import './instrument' // Must be the very first import
+import * as Sentry from '@sentry/node'
 import consoleStamp from 'console-stamp'
 import { createApp } from './app'
 
@@ -17,8 +19,9 @@ const server = app.listen(port, (error) => {
 
 const shutdown = (signal: NodeJS.Signals) => {
   server.closeAllConnections()
-  server.close(() => {
+  server.close(async () => {
     console.log(`${signal} - Server closed.`)
+    await Sentry.close(2000)
     process.exit(0)
   })
 }

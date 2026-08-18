@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/node'
 import { Application, type Request, Router } from 'express'
 import rateLimit from 'express-rate-limit'
 import { z } from 'zod'
@@ -41,12 +42,20 @@ export const createRouter = (app: Application) => {
     const { username } = routeSchema.parse(req.params)
     const query = querySchema.parse(req.query)
 
+    Sentry.getActiveSpan()?.setAttributes({
+      'request.username': username,
+      'request.year': query.y,
+      'request.format': query.format,
+      'cache.hit': false,
+    })
+
     const cacheKey = getCacheKey(username, query)
 
     if (req.header('cache-control') !== 'no-cache') {
       const cached = cache.get(cacheKey)
 
       if (cached !== null) {
+        Sentry.getActiveSpan()?.setAttribute('cache.hit', true)
         res.setHeader('age', ageInSeconds(cached))
         res.setHeader('x-cache', 'HIT')
         res.json(cached.response)
@@ -59,7 +68,7 @@ export const createRouter = (app: Application) => {
         if (isHTTPError(error) && error.statusCode === 404) {
           throw new HTTPError(404, `GitHub user "${username}" not found.`)
         }
-        throw error
+        throw new Error(`Failed to scrape contributions of "${username}"`)
       },
     )
 
