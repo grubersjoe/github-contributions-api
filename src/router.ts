@@ -48,8 +48,6 @@ export const createRouter = (app: Application) => {
     if (span) {
       Sentry.getRootSpan(span).setAttributes({
         'request.username': username,
-        'request.year': query.y,
-        'request.format': query.format,
         'cache.hit': false,
       })
     }
@@ -145,18 +143,18 @@ const querySchema = z.object({
       }
 
       const years = typeof y === 'string' ? [Number(y)] : y.map(Number)
-      const parsed = z.array(z.int()).safeParse(years)
+      const parsedYears = z.array(z.int()).safeParse(years)
 
-      if (!parsed.success) {
+      if (!parsedYears.success) {
         ctx.addIssue({
           code: 'invalid_value',
-          message: parsed.error.message,
+          message: parsedYears.error.message,
           values: years,
         })
         return z.NEVER
       }
 
-      return uniq(parsed.data)
+      return uniq(parsedYears.data).sort()
     }),
   format: z.literal('nested').optional(),
 })
