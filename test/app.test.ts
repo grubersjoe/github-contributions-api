@@ -1,11 +1,11 @@
 import request from 'supertest'
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { createApp, HTTPError, version } from './app'
-import * as github from './github'
-import { Response } from './github'
-import testDataMultipleYears from '../fixtures/grubersjoe-2017-2018.json'
-import testDataNested from '../fixtures/grubersjoe-2018-nested.json'
-import testData from '../fixtures/grubersjoe-2018.json'
+import { createApp, HTTPError, version } from '../src/app'
+import * as github from '../src/github'
+import { Response } from '../src/github'
+import testDataMultipleYears from './fixtures/grubersjoe-2017-2018.json'
+import testDataNested from './fixtures/grubersjoe-2018-nested.json'
+import testData from './fixtures/grubersjoe-2018.json'
 
 const username = 'grubersjoe'
 

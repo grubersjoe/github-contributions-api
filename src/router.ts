@@ -65,7 +65,7 @@ export const createRouter = (app: Application) => {
         },
         (span) => {
           const item = cache.get(cacheKey)
-          const cacheHit = item !== null
+          const cacheHit = item !== undefined
 
           span.setAttribute('cache.hit', cacheHit)
           Sentry.getRootSpan(span).setAttribute('cache.hit', cacheHit)
@@ -78,7 +78,7 @@ export const createRouter = (app: Application) => {
         },
       )
 
-      if (cached !== null) {
+      if (cached !== undefined) {
         res.setHeader('age', ageInSeconds(cached))
         res.setHeader('x-cache', 'HIT')
         res.json(cached.response)
@@ -96,20 +96,19 @@ export const createRouter = (app: Application) => {
     )
 
     const cacheItem: CacheItem = { ts: Date.now(), response }
-    const cacheTTLSeconds = 60 * 60 // one hour
 
     Sentry.startSpan(
       {
         name: cacheKey,
         attributes: {
           'cache.key': [cacheKey],
-          'cache.ttl': cacheTTLSeconds,
+          'cache.ttl': cache.ttl ? cache.ttl / 1000 : undefined,
           'cache.item_size': JSON.stringify(cacheItem).length,
         },
         op: 'cache.put',
       },
       () => {
-        cache.put(cacheKey, cacheItem, cacheTTLSeconds * 1000)
+        cache.set(cacheKey, cacheItem)
       },
     )
 
