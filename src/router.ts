@@ -1,9 +1,11 @@
 import * as Sentry from '@sentry/node'
 import { Application, type Request, Router } from 'express'
 import rateLimit from 'express-rate-limit'
+import stableStringify from 'json-stable-stringify'
+import { createHash } from 'node:crypto'
 import { z } from 'zod'
 import { HTTPError, isHTTPError } from './app'
-import { ageInSeconds, createCache } from './cache'
+import { ageInSeconds, CacheItem, createCache } from './cache'
 import { NestedResponse, Response, scrapeContributions } from './github'
 
 export const createRouter = (app: Application) => {
@@ -42,20 +44,43 @@ export const createRouter = (app: Application) => {
     const { username } = routeSchema.parse(req.params)
     const query = querySchema.parse(req.query)
 
-    Sentry.getActiveSpan()?.setAttributes({
-      'request.username': username,
-      'request.year': query.y,
-      'request.format': query.format,
-      'cache.hit': false,
-    })
+    const span = Sentry.getActiveSpan()
+    if (span) {
+      Sentry.getRootSpan(span).setAttributes({
+        'request.username': username,
+        'request.year': query.y,
+        'request.format': query.format,
+        'cache.hit': false,
+      })
+    }
 
     const cacheKey = getCacheKey(username, query)
 
     if (req.header('cache-control') !== 'no-cache') {
-      const cached = cache.get(cacheKey)
+      const cached = Sentry.startSpan(
+        {
+          name: cacheKey,
+          attributes: {
+            'cache.key': [cacheKey],
+          },
+          op: 'cache.get',
+        },
+        (span) => {
+          const item = cache.get(cacheKey)
+          const cacheHit = item !== null
+
+          span.setAttribute('cache.hit', cacheHit)
+          Sentry.getRootSpan(span).setAttribute('cache.hit', cacheHit)
+
+          if (cacheHit) {
+            span.setAttribute('cache.item_size', JSON.stringify(item).length)
+          }
+
+          return item
+        },
+      )
 
       if (cached !== null) {
-        Sentry.getActiveSpan()?.setAttribute('cache.hit', true)
         res.setHeader('age', ageInSeconds(cached))
         res.setHeader('x-cache', 'HIT')
         res.json(cached.response)
@@ -72,7 +97,24 @@ export const createRouter = (app: Application) => {
       },
     )
 
-    cache.put(cacheKey, { ts: Date.now(), response }, 1000 * 60 * 60) // one hour
+    const cacheItem: CacheItem = { ts: Date.now(), response }
+    const cacheTTLSeconds = 60 * 60 // one hour
+
+    Sentry.startSpan(
+      {
+        name: cacheKey,
+        attributes: {
+          'cache.key': [cacheKey],
+          'cache.ttl': cacheTTLSeconds,
+          'cache.item_size': JSON.stringify(cacheItem).length,
+        },
+        op: 'cache.put',
+      },
+      () => {
+        cache.put(cacheKey, cacheItem, cacheTTLSeconds * 1000)
+      },
+    )
+
     res.setHeader('age', 0)
     res.setHeader('x-cache', 'MISS')
 
@@ -138,7 +180,15 @@ type Req = Request<
   z.input<typeof querySchema>
 >
 
-const getCacheKey = (username: string, query: ReqQuery) =>
-  `${username}-${JSON.stringify(query)}`
+const getCacheKey = (username: string, query: ReqQuery) => {
+  const queryString = stableStringify(query)
+  if (!queryString) {
+    throw new Error('Unexpected error: empty query')
+  }
+
+  const queryHash = createHash('sha256').update(queryString).digest('base64url')
+
+  return `cache-${username}-${queryHash}`
+}
 
 const uniq = <T = unknown>(a: Array<T>) => [...new Set(a)]

@@ -1,7 +1,7 @@
-import memoryCache from 'memory-cache'
+import memoryCache from 'memory-cache' // TODO: replace with lru-cache
 import { NestedResponse, Response } from './github'
 
-type CacheItem = {
+export type CacheItem = {
   ts: number // UNIX timestamp in ms
   response: Response | NestedResponse
 }
