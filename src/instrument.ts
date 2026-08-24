@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/node'
+import { log } from './app'
 
 if (process.env.SENTRY_DSN) {
   Sentry.init({
@@ -9,4 +10,7 @@ if (process.env.SENTRY_DSN) {
       userInfo: true,
     },
   })
+  log(`Sentry initialized for DSN ${process.env.SENTRY_DSN}`)
+} else {
+  log(`Sentry disabled`)
 }
