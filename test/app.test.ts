@@ -167,13 +167,11 @@ describe('The :username endpoint', () => {
   })
 
   test.each([[new HTTPError(500, '💥')], [new Error('💥')]])(
-    'returns HTTP 500 for errors and writes log',
+    'returns HTTP 500 for errors',
     async (err) => {
       const scrapeContributionsMock = vi.spyOn(github, 'scrapeContributions')
 
       scrapeContributionsMock.mockRejectedValue(err)
-
-      const logSpy = vi.spyOn(global.console, 'error')
 
       await request(app)
         .get(`/${version}/${username}`)
@@ -183,8 +181,6 @@ describe('The :username endpoint', () => {
             error: `Failed to scrape contributions of "${username}"`,
           })
         })
-
-      expect(logSpy).toHaveBeenCalledOnce()
     },
   )
 

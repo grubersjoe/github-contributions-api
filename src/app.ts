@@ -37,7 +37,7 @@ export const createApp = () => {
   return app
 }
 
-const errorHandler: ErrorRequestHandler = (error: unknown, req, res, next) => {
+const errorHandler: ErrorRequestHandler = (error: unknown, _req, res, next) => {
   if (error instanceof ZodError) {
     res.status(400).json({
       error: 'Invalid request',
@@ -51,14 +51,8 @@ const errorHandler: ErrorRequestHandler = (error: unknown, req, res, next) => {
   }
 
   if (isHTTPError(error)) {
-    if (error.statusCode >= 500) {
-      console.error({ url: req.url, error })
-    }
-
     res.status(error.statusCode).json({ error: error.message })
   } else {
-    console.error({ url: req.url, error })
-
     res
       .status(500)
       .json({ error: error instanceof Error ? error.message : 'Internal' })
