@@ -17,7 +17,18 @@ export const createRouter = (app: Application) => {
     limit: () => app.get('rate_limit') ?? 10,
     standardHeaders: 'draft-8',
     legacyHeaders: false,
-    message: { error: 'Too many requests, please try again later.' },
+
+    handler: (_req, res, _next, options) => {
+      Sentry.metrics.count('http.rate_limit', 1, {
+        attributes: {
+          route: '/:username',
+        },
+      })
+
+      return res
+        .status(options.statusCode)
+        .send({ error: 'Too many requests, please try again later.' })
+    },
 
     // Rate-limit all uncached requests but ignore tests.
     skip: (req) => {
