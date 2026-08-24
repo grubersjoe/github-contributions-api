@@ -133,7 +133,10 @@ export const createRouter = (app: Application) => {
 }
 
 const routeSchema = z.object({
-  username: z.string().min(1),
+  username: z
+    .string()
+    .min(1)
+    .transform((u) => u.toLowerCase()),
 })
 
 const querySchema = z.object({
@@ -196,7 +199,7 @@ const getCacheKey = (username: string, query: ReqQuery) => {
 
   const queryHash = createHash('sha256').update(queryString).digest('base64url')
 
-  return `cache-${username}-${queryHash}`
+  return `cache-${username.toLowerCase()}-${queryHash}`
 }
 
 const uniq = <T = unknown>(a: Array<T>) => [...new Set(a)]

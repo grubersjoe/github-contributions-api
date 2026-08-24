@@ -185,7 +185,7 @@ describe('The :username endpoint', () => {
   )
 
   test('caches responses', async () => {
-    await request(app)
+    const resp = await request(app)
       .get(`/${version}/${username}?y=2020`)
       .expect(200)
       .expect(({ headers }) => {
@@ -197,8 +197,9 @@ describe('The :username endpoint', () => {
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
     await request(app)
-      .get(`/${version}/${username}?y=2020`)
-      .expect(200)
+      .get(`/${version}/${username.toUpperCase()}?y=2020`) // ensure username casing does not matter
+      .set('if-none-match', resp.get('etag') ?? '')
+      .expect(304)
       .expect(({ headers }) => {
         expect(Number(headers.age)).toBeGreaterThanOrEqual(1)
         expect(headers['x-cache']).toBe('HIT')
