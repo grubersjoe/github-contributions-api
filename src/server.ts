@@ -1,9 +1,13 @@
 import './instrument' // Must be the very first import
 import * as Sentry from '@sentry/node'
-import { createApp, log } from './app'
+import { createApp } from './app'
 
 const app = createApp()
 const port = process.env.PORT ?? 8080
+
+const log = (message: string, level?: 'warn' | 'error') => {
+  console[level ?? 'log'](`${new Date().toISOString()}: ${message}`)
+}
 
 const server = app.listen(port, (error) => {
   if (error) {
