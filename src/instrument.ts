@@ -17,6 +17,12 @@ if (process.env.SENTRY_DSN) {
     dataCollection: {
       userInfo: true,
     },
+    beforeSendSpan(span) {
+      if (span.is_segment) {
+        span.data['cache.hit'] ??= false
+      }
+      return span
+    },
   })
   console.log(`Sentry initialized`)
 } else {

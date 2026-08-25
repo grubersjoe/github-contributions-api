@@ -35,14 +35,6 @@ export const createRouter = (app: Application) => {
     const { username } = routeSchema.parse(req.params)
     const query = querySchema.parse(req.query)
 
-    const span = Sentry.getActiveSpan()
-    if (span) {
-      Sentry.getRootSpan(span).setAttributes({
-        'request.username': username,
-        'cache.hit': false,
-      })
-    }
-
     const cacheKey = getCacheKey(username, query)
 
     if (req.header('cache-control') !== 'no-cache') {
