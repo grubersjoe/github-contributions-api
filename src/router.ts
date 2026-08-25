@@ -15,9 +15,9 @@ export const createRouter = (app: Application) => {
   const limiter = rateLimit({
     windowMs: 10 * 1000, // 10 seconds
     limit: () => app.get('rate_limit') ?? 10,
+    skip: () => process.env.NODE_ENV === 'test', // ignore tests
     standardHeaders: 'draft-8',
     legacyHeaders: false,
-
     handler: (_req, res, _next, options) => {
       Sentry.metrics.count('http.rate_limit', 1, {
         attributes: {
@@ -28,26 +28,6 @@ export const createRouter = (app: Application) => {
       return res
         .status(options.statusCode)
         .send({ error: 'Too many requests, please try again later.' })
-    },
-
-    // Rate-limit all uncached requests but ignore tests.
-    skip: (req) => {
-      if (process.env.NODE_ENV === 'test') {
-        return true
-      }
-
-      if (req.header('cache-control') === 'no-cache') {
-        return false
-      }
-
-      return Boolean(
-        cache.get(
-          getCacheKey(
-            routeSchema.parse(req.params).username,
-            querySchema.parse(req.query),
-          ),
-        ),
-      )
     },
   })
 
