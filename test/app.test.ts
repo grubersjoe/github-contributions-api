@@ -1,8 +1,9 @@
 import request from 'supertest'
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { createApp, HTTPError, version } from '../src/app'
+import { TTLCache } from '@isaacs/ttlcache'
+import { createApp, version } from '../src/app'
 import * as github from '../src/github'
-import { Response } from '../src/github'
+import { HTTPError } from '../src/errors'
 import testDataMultipleYears from './fixtures/grubersjoe-2017-2018.json'
 import testDataNested from './fixtures/grubersjoe-2018-nested.json'
 import testData from './fixtures/grubersjoe-2018.json'
@@ -21,7 +22,7 @@ describe('The :username endpoint', () => {
     await request(app)
       .get(`/${version}/${username}?${y}`)
       .expect(200)
-      .expect(({ body }: { body: Response }) => {
+      .expect(({ body }: { body: github.Response }) => {
         expect(Object.keys(body.total).length).toBeGreaterThanOrEqual(14)
 
         for (const count of Object.values(body.total)) {
@@ -50,7 +51,7 @@ describe('The :username endpoint', () => {
     request(app)
       .get(`/${version}/${username}?y=last`)
       .expect(200)
-      .expect(({ body }: { body: Response }) => {
+      .expect(({ body }: { body: github.Response }) => {
         expect(Object.keys(body.total)).toContain('lastYear')
         expect(typeof body.total.lastYear).toBe('number')
       }))
@@ -94,6 +95,23 @@ describe('The :username endpoint', () => {
     },
   )
 
+  test('returns HTTP 400 for invalid username', () =>
+    request(app)
+      .get(`/${version}/-invalid`)
+      .expect(400)
+      .expect(({ body }) => {
+        expect(body).toStrictEqual({
+          error: `Invalid request`,
+          issues: [
+            {
+              code: 'invalid_format',
+              message: 'Invalid GitHub username',
+              path: 'username',
+            },
+          ],
+        })
+      }))
+
   test.each([['y='], ['y=invalid'], ['y=2020abc'], ['y=abc2020']])(
     'returns HTTP 400 for invalid query %s',
     async (y) => {
@@ -107,7 +125,7 @@ describe('The :username endpoint', () => {
               {
                 code: 'invalid_format',
                 message:
-                  'Invalid string: must match pattern /^(?:\\d+|all|last)$/',
+                  'Invalid input: expected one or more number(s), "all" or "last"',
                 path: 'y',
               },
             ],
@@ -148,7 +166,7 @@ describe('The :username endpoint', () => {
             {
               code: 'invalid_format',
               message:
-                'Invalid string: must match pattern /^(?:\\d+|all|last)$/',
+                'Invalid input: expected one or more number(s), "all" or "last"',
               path: 'y',
             },
             {
@@ -166,11 +184,10 @@ describe('The :username endpoint', () => {
     expect(scrapeContributionsSpy).toHaveBeenCalledOnce()
   })
 
-  test.each([[new HTTPError(500, '💥')], [new Error('💥')]])(
+  test.each([[new HTTPError(504, '💥')], [new Error('💥')]])(
     'returns HTTP 500 for errors',
     async (err) => {
       const scrapeContributionsMock = vi.spyOn(github, 'scrapeContributions')
-
       scrapeContributionsMock.mockRejectedValue(err)
 
       await request(app)
@@ -183,6 +200,21 @@ describe('The :username endpoint', () => {
         })
     },
   )
+
+  test('does not leak internal errors', async () => {
+    vi.spyOn(TTLCache.prototype, 'set').mockImplementation(() => {
+      throw new Error('💥')
+    })
+
+    await request(app)
+      .get(`/${version}/${username}`)
+      .expect(500)
+      .expect(({ body }) => {
+        expect(body).toStrictEqual({
+          error: 'Internal server error',
+        })
+      })
+  })
 
   test('caches responses', async () => {
     const resp = await request(app)

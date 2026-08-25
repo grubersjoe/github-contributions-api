@@ -95,7 +95,7 @@ const scrapeYear = async (
   )
 
   if (!totalMatch) {
-    throw Error('Failed parsing total contributions count')
+    throw new Error('Failed parsing total contributions count')
   }
 
   const total = parseInt(totalMatch[0].replaceAll(',', ''))
@@ -145,11 +145,11 @@ const parseDay = (day: Element, tooltipsByDayId: Record<string, Element>) => {
   }
 
   if (!attr.date) {
-    throw Error('Failed parsing contribution date attribute')
+    throw new Error('Failed parsing contribution date attribute')
   }
 
   if (!attr.level) {
-    throw Error('Failed parsing contribution level attribute')
+    throw new Error('Failed parsing contribution level attribute')
   }
 
   let count = 0
@@ -165,11 +165,11 @@ const parseDay = (day: Element, tooltipsByDayId: Record<string, Element>) => {
   const level = parseInt(attr.level) as Level
 
   if (isNaN(count)) {
-    throw Error('Failed parsing contribution count')
+    throw new Error('Failed parsing contribution count')
   }
 
   if (isNaN(level)) {
-    throw Error('Failed parsing contribution level')
+    throw new Error('Failed parsing contribution level')
   }
 
   const contribution = {

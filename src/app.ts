@@ -3,6 +3,7 @@ import compression from 'compression'
 import cors from 'cors'
 import express, { ErrorRequestHandler } from 'express'
 import { ZodError } from 'zod'
+import { isHTTPError, ClientSafeError, log } from './errors'
 import { createRouter } from './router'
 
 export const version = 'v4'
@@ -52,23 +53,12 @@ const errorHandler: ErrorRequestHandler = (error: unknown, _req, res, next) => {
 
   if (isHTTPError(error)) {
     res.status(error.statusCode).json({ error: error.message })
+  } else if (error instanceof ClientSafeError) {
+    res.status(500).json({ error: error.message })
   } else {
-    res
-      .status(500)
-      .json({ error: error instanceof Error ? error.message : 'Internal' })
+    res.status(500).json({ error: 'Internal server error' })
+    log(error instanceof Error ? error.message : 'Unknown error', 'error')
   }
 
   next()
 }
-
-export class HTTPError extends Error {
-  readonly statusCode: number
-
-  constructor(statusCode: number, message: string) {
-    super(message)
-    this.statusCode = statusCode
-  }
-}
-
-export const isHTTPError = (error: unknown): error is HTTPError =>
-  error instanceof Error && Object.hasOwnProperty.call(error, 'statusCode')

@@ -4,9 +4,9 @@ import rateLimit from 'express-rate-limit'
 import stableStringify from 'json-stable-stringify'
 import { createHash } from 'node:crypto'
 import { z } from 'zod'
-import { HTTPError, isHTTPError } from './app'
 import { ageInSeconds, CacheItem, createCache } from './cache'
 import { NestedResponse, Response, scrapeContributions } from './github'
+import { isHTTPError, HTTPError, ClientSafeError } from './errors'
 
 export const createRouter = (app: Application) => {
   const router = Router()
@@ -74,7 +74,9 @@ export const createRouter = (app: Application) => {
         if (isHTTPError(error) && error.statusCode === 404) {
           throw new HTTPError(404, `GitHub user "${username}" not found.`)
         }
-        throw new Error(`Failed to scrape contributions of "${username}"`)
+        throw new ClientSafeError(
+          `Failed to scrape contributions of "${username}"`,
+        )
       },
     )
 
@@ -105,17 +107,28 @@ export const createRouter = (app: Application) => {
 }
 
 const routeSchema = z.object({
+  // GitHub: Username may only contain alphanumeric characters or single hyphens,
+  // and cannot begin or end with a hyphen.
   username: z
     .string()
-    .min(1)
+    .regex(/^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$/, {
+      error: 'Invalid GitHub username',
+    })
     .transform((u) => u.toLowerCase()),
 })
 
 const querySchema = z.object({
   y: z
     .union([
-      z.string().regex(/^(?:\d+|all|last)$/),
-      z.array(z.string().regex(/^\d+$/)),
+      z.string().regex(/^(?:\d+|all|last)$/, {
+        error: 'Invalid input: expected one or more number(s), "all" or "last"',
+      }),
+      z.array(
+        z.string().regex(/^\d+$/, {
+          error:
+            'Invalid input: expected one or more number(s), "all" or "last"',
+        }),
+      ),
     ])
     .optional()
     .transform((y, ctx) => {
