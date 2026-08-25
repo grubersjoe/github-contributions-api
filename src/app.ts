@@ -38,7 +38,14 @@ export const createApp = () => {
   return app
 }
 
-const errorHandler: ErrorRequestHandler = (error: unknown, _req, res, next) => {
+const errorHandler: ErrorRequestHandler = (
+  error: unknown,
+  _req,
+  res,
+  // Do not remove. Express.js detects error handlers by parameter arity (great idea).
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _next,
+) => {
   if (error instanceof ZodError) {
     res.status(400).json({
       error: 'Invalid request',
@@ -59,6 +66,4 @@ const errorHandler: ErrorRequestHandler = (error: unknown, _req, res, next) => {
     res.status(500).json({ error: 'Internal server error' })
     log(error instanceof Error ? error.message : 'Unknown error', 'error')
   }
-
-  next()
 }
