@@ -31,18 +31,20 @@ export const scrapeContributions = async (
   username: string,
   query: ReqQuery,
 ): Promise<Response | NestedResponse> => {
-  let requests = []
+  const requests = async () => {
+    if (query.y === 'all') {
+      const allYears = await fetchAllYearsFor(username)
+      return allYears.map((year) => scrapeYear(username, year, query.format))
+    }
 
-  if (query.y === 'last') {
-    requests.push(scrapeYear(username, 'lastYear', query.format))
-  } else {
-    const yearLinks = await scrapeYearLinks(username, query.y)
-    requests = yearLinks.map((link) =>
-      scrapeYear(username, link.year, query.format),
-    )
+    if (query.y === 'last') {
+      return [scrapeYear(username, query.y, query.format)]
+    }
+
+    return query.y.map((year) => scrapeYear(username, year, query.format))
   }
 
-  return Promise.all(requests).then((contributions) => {
+  return Promise.all(await requests()).then((contributions) => {
     if (query.format === 'nested') {
       return (contributions as Array<NestedResponse>).reduce(
         (resp, curr) => ({
@@ -73,11 +75,11 @@ export const scrapeContributions = async (
 
 const scrapeYear = async (
   username: string,
-  year: number | 'lastYear',
+  year: number | 'last',
   format?: 'nested',
 ): Promise<Response | NestedResponse> => {
   const url =
-    year === 'lastYear'
+    year === 'last'
       ? `https://github.com/users/${username}/contributions`
       : `https://github.com/users/${username}/contributions?tab=overview&from=${year}-12-01&to=${year}-12-31`
 
@@ -110,7 +112,7 @@ const scrapeYear = async (
 
   const response = {
     total: {
-      [year]: total,
+      [year === 'last' ? 'lastYear' : year]: total,
     },
     contributions: {},
   }
@@ -184,17 +186,13 @@ const parseDay = (day: Element, tooltipsByDayId: Record<string, Element>) => {
   }
 }
 
-const scrapeYearLinks = async (
-  username: string,
-  years: 'all' | Array<number>,
-) => {
+const fetchAllYearsFor = async (username: string) => {
   const url = `https://github.com/${username}?action=show&controller=profiles&tab=contributions&user_id=${username}`
   const $ = await fromURL(url, requestOptions(username))
 
   return $('.js-year-link')
     .get()
-    .map((a) => ({ year: parseInt($(a).text().trim()) }))
-    .filter((link) => (years === 'all' ? true : years.includes(link.year)))
+    .map((a) => parseInt($(a).text().trim()))
 }
 
 const requestOptions = (username: string): CheerioRequestOptions => ({

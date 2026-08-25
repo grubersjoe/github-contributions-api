@@ -1,6 +1,7 @@
 import request from 'supertest'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { TTLCache } from '@isaacs/ttlcache'
+import { eachDayOfInterval, format as formatDate } from 'date-fns'
 import { createApp, version } from '../src/app'
 import * as github from '../src/github'
 import { HTTPError } from '../src/errors'
@@ -68,10 +69,18 @@ describe('The :username endpoint', () => {
     request(app)
       .get(`/${version}/${username}?y=1900`)
       .expect(200)
-      .expect(({ body }) => {
-        expect(body).toStrictEqual({
-          total: {},
-          contributions: [],
+      .expect(({ body }: { body: github.Response }) => {
+        expect(body.total).toStrictEqual({ 1900: 0 })
+
+        eachDayOfInterval({
+          start: new Date(1900, 0, 1),
+          end: new Date(1900, 11, 31),
+        }).forEach((date, index) => {
+          expect(body.contributions[index]).toStrictEqual({
+            date: formatDate(date, 'yyyy-MM-dd'),
+            count: 0,
+            level: 0,
+          })
         })
       }))
 
