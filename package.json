@@ -55,8 +55,8 @@
     "@types/express": "^5.0.6",
     "@types/node": "^22.20.1",
     "@types/supertest": "^7.2.1",
-    "@vitest/coverage-v8": "^4.1.10",
-    "eslint": "^10.8.1",
+    "@vitest/coverage-v8": "^4.1.11",
+    "eslint": "^10.9.0",
     "globals": "^17.11.0",
     "husky": "^9.1.7",
     "nodemon": "^3.1.14",
@@ -65,7 +65,7 @@
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.67.0",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   },
   "prettier": {
     "proseWrap": "always",
