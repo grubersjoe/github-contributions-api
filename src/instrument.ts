@@ -1,13 +1,20 @@
 import * as Sentry from '@sentry/node'
 import { execFileSync } from 'node:child_process'
 
-const gitHash = execFileSync('git', ['rev-parse', '--short', 'HEAD'], {
-  encoding: 'utf8',
-}).trim()
+const gitHash = () => {
+  try {
+    return execFileSync('git', ['rev-parse', '--short', 'HEAD'], {
+      encoding: 'utf8',
+    }).trim()
+  } catch (error) {
+    console.error(`Failed to determine git hash: ${String(error)}`)
+    return undefined
+  }
+}
 
 if (process.env.SENTRY_DSN) {
   Sentry.init({
-    release: gitHash,
+    release: gitHash(),
     dsn: process.env.SENTRY_DSN,
     integrations: (defaults) => [
       ...defaults,
