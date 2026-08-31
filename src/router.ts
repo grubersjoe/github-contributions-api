@@ -5,8 +5,8 @@ import stableStringify from 'json-stable-stringify'
 import { createHash } from 'node:crypto'
 import { z } from 'zod'
 import { ageInSeconds, CacheItem, createCache } from './cache'
+import { ClientSafeError, HTTPError, isHTTPError } from './errors'
 import { NestedResponse, Response, scrapeContributions } from './github'
-import { isHTTPError, HTTPError, ClientSafeError } from './errors'
 
 export const createRouter = (app: Application) => {
   const router = Router()
@@ -71,9 +71,19 @@ export const createRouter = (app: Application) => {
 
     const response = await scrapeContributions(username, query).catch(
       (error: unknown) => {
-        if (isHTTPError(error) && error.statusCode === 404) {
-          throw new HTTPError(404, `GitHub user "${username}" not found.`)
+        if (isHTTPError(error)) {
+          switch (error.statusCode) {
+            case 404:
+              throw new HTTPError(404, `GitHub user "${username}" not found.`)
+            case 502:
+              throw new HTTPError(502, `GitHub: Bad gateway.`)
+            case 503:
+              throw new HTTPError(503, `GitHub: Service unavailable.`)
+            case 504:
+              throw new HTTPError(504, `GitHub: Gateway timeout.`)
+          }
         }
+
         throw new ClientSafeError(
           `Failed to scrape contributions of "${username}"`,
         )

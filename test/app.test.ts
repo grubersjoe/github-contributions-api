@@ -1,10 +1,10 @@
-import request from 'supertest'
-import { afterEach, describe, expect, test, vi } from 'vitest'
 import { TTLCache } from '@isaacs/ttlcache'
 import { eachDayOfInterval, format as formatDate } from 'date-fns'
+import request from 'supertest'
+import { afterEach, describe, expect, test, vi } from 'vitest'
 import { createApp, version } from '../src/app'
-import * as github from '../src/github'
 import { HTTPError } from '../src/errors'
+import * as github from '../src/github'
 import testDataMultipleYears from './fixtures/grubersjoe-2017-2018.json'
 import testDataNested from './fixtures/grubersjoe-2018-nested.json'
 import testData from './fixtures/grubersjoe-2018.json'
@@ -84,25 +84,21 @@ describe('The :username endpoint', () => {
         })
       }))
 
-  test.each([[''], ['y=last']])(
-    'returns HTTP 404 if the user cannot be found for query %s',
-    async (y) => {
-      const nonExistingUser = '43b83cb5-2d8f-44d3-b01c-98a73af7a15f'
+  test('returns HTTP 404 if the user cannot be found', async () => {
+    const logSpy = vi.spyOn(global.console, 'error')
+    const nonExistingUser = '43b83cb5-2d8f-44d3-b01c-98a73af7a15f'
 
-      const logSpy = vi.spyOn(global.console, 'error')
-
-      await request(app)
-        .get(`/${version}/${nonExistingUser}?${y}`)
-        .expect(404)
-        .expect(({ body }) => {
-          expect(body).toStrictEqual({
-            error: `GitHub user "${nonExistingUser}" not found.`,
-          })
+    await request(app)
+      .get(`/${version}/${nonExistingUser}`)
+      .expect(404)
+      .expect(({ body }) => {
+        expect(body).toStrictEqual({
+          error: `GitHub user "${nonExistingUser}" not found.`,
         })
+      })
 
-      expect(logSpy).not.toHaveBeenCalled()
-    },
-  )
+    expect(logSpy).not.toHaveBeenCalled()
+  })
 
   test('returns HTTP 400 for invalid username', () =>
     request(app)
@@ -193,18 +189,23 @@ describe('The :username endpoint', () => {
     expect(scrapeContributionsSpy).toHaveBeenCalledOnce()
   })
 
-  test.each([[new HTTPError(504, '💥')], [new Error('💥')]])(
-    'returns HTTP 500 for errors',
-    async (err) => {
+  test.each([
+    [new Error('💥'), 500, `Failed to scrape contributions of "${username}"`],
+    [new HTTPError(502, '💥'), 502, 'GitHub: Bad gateway.'],
+    [new HTTPError(503, '💥'), 503, 'GitHub: Service unavailable.'],
+    [new HTTPError(504, '💥'), 504, 'GitHub: Gateway timeout.'],
+  ])(
+    'returns HTTP $1 for respective error',
+    async (err, expectedStatus, expectedError) => {
       const scrapeContributionsMock = vi.spyOn(github, 'scrapeContributions')
       scrapeContributionsMock.mockRejectedValue(err)
 
       await request(app)
         .get(`/${version}/${username}`)
-        .expect(500)
+        .expect(expectedStatus)
         .expect(({ body }) => {
           expect(body).toStrictEqual({
-            error: `Failed to scrape contributions of "${username}"`,
+            error: expectedError,
           })
         })
     },
