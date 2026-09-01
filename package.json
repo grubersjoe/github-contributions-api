@@ -37,15 +37,15 @@
   ],
   "dependencies": {
     "@isaacs/ttlcache": "^2.1.5",
-    "@sentry/node": "^10.70.0",
+    "@sentry/node": "^10.72.0",
     "cheerio": "^1.2.0",
     "compression": "^1.8.1",
     "cors": "^2.8.6",
     "domhandler": "^6.0.1",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.6.2",
+    "express-rate-limit": "^8.7.0",
     "json-stable-stringify": "^1.3.0",
-    "zod": "^4.4.3"
+    "zod": "^4.5.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -57,7 +57,7 @@
     "@types/supertest": "^7.2.1",
     "@vitest/coverage-v8": "^4.1.11",
     "date-fns": "^4.4.0",
-    "eslint": "^10.9.0",
+    "eslint": "^10.9.1",
     "globals": "^17.11.0",
     "husky": "^9.1.7",
     "nodemon": "^3.1.14",
@@ -65,7 +65,7 @@
     "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.67.0",
+    "typescript-eslint": "^8.68.0",
     "vitest": "^4.1.11"
   },
   "prettier": {
