@@ -1,3 +1,5 @@
+import { styleText } from 'node:util'
+
 export class ClientSafeError extends Error {}
 
 export class HTTPError extends Error {
@@ -13,5 +15,7 @@ export const isHTTPError = (error: unknown): error is HTTPError =>
   error instanceof Error && Object.hasOwnProperty.call(error, 'statusCode')
 
 export const log = (message: string, level?: 'warn' | 'error') => {
-  console[level ?? 'log'](`${new Date().toISOString()}: ${message}`)
+  const time = styleText('magenta', `[${new Date().toISOString()}]`)
+  const styledMessage = level === 'error' ? styleText('red', message) : message
+  console[level ?? 'log'](`${time} ${styledMessage}`)
 }

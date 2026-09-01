@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/node'
 import { execFileSync } from 'node:child_process'
+import { log } from './errors'
 
 const gitHash = () => {
   try {
@@ -31,7 +32,7 @@ if (process.env.SENTRY_DSN) {
       return span
     },
   })
-  console.log(`Sentry initialized`)
+  log('Sentry initialized')
 } else {
-  console.log(`Sentry disabled`)
+  log('Sentry disabled')
 }
