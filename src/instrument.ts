@@ -25,6 +25,12 @@ if (process.env.SENTRY_DSN) {
     dataCollection: {
       userInfo: true,
     },
+    beforeSendTransaction(event) {
+      if (event.contexts?.trace?.data?.['http.response.status_code'] === 429) {
+        return null // ignore rate-limited requests
+      }
+      return event
+    },
     beforeSendSpan(span) {
       if (span.is_segment) {
         span.data['cache.hit'] ??= false
