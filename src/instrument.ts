@@ -21,6 +21,7 @@ if (process.env.SENTRY_DSN) {
       ...defaults,
       Sentry.nodeRuntimeMetricsIntegration(),
     ],
+    sampleRate: 0.25,
     tracesSampleRate: 0.1,
     dataCollection: {
       userInfo: true,
