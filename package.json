@@ -37,7 +37,7 @@
   ],
   "dependencies": {
     "@isaacs/ttlcache": "^2.1.5",
-    "@sentry/node": "^10.75.0",
+    "@sentry/node": "^11.0.0",
     "cheerio": "^1.2.0",
     "compression": "^1.8.2",
     "cors": "^2.8.6",
