@@ -1,4 +1,3 @@
-import { setupExpressErrorHandler } from '@sentry/node'
 import compression from 'compression'
 import cors from 'cors'
 import express, { ErrorRequestHandler } from 'express'
@@ -28,10 +27,6 @@ export const createApp = () => {
   })
 
   app.use(`/${version}`, createRouter(app))
-
-  if (process.env.SENTRY_DSN) {
-    setupExpressErrorHandler(app)
-  }
 
   app.use(errorHandler) // Needs to be last
 

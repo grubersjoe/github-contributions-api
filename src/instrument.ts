@@ -23,21 +23,19 @@ if (process.env.SENTRY_DSN) {
     ],
     sampleRate: 0.25,
     tracesSampleRate: 0.1,
-    dataCollection: {
-      userInfo: true,
-    },
-    beforeSendTransaction(event) {
-      if (event.contexts?.trace?.data?.['http.response.status_code'] === 429) {
-        return null // ignore rate-limited requests
-      }
-      return event
-    },
     beforeSendSpan(span) {
       if (span.is_segment) {
-        span.data['cache.hit'] ??= false
+        span.attributes['cache.hit'] ??= false
       }
       return span
     },
+    ignoreSpans: [
+      {
+        attributes: {
+          'http.response.status_code': 429, // ignore rate-limited requests
+        },
+      },
+    ],
   })
   log('Sentry initialized')
 } else {
