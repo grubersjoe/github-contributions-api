@@ -1,6 +1,7 @@
-import { fromURL, CheerioRequestOptions } from 'cheerio'
-
+import { CheerioRequestOptions, fromURL } from 'cheerio'
 import { Element, isText } from 'domhandler'
+import { errors } from 'undici'
+import { ClientSafeError, HTTPError } from './errors'
 import { ReqQuery } from './router'
 
 type Level = 0 | 1 | 2 | 3 | 4
@@ -27,6 +28,9 @@ export type NestedResponse = {
   contributions: Record<number, Record<number, Record<number, Contribution>>> // [y][m][d]
 }
 
+/**
+ * @throws {HTTPError, ClientSafeError}
+ */
 export const scrapeContributions = async (
   username: string,
   query: ReqQuery,
@@ -73,6 +77,9 @@ export const scrapeContributions = async (
   })
 }
 
+/**
+ * @throws {HTTPError, ClientSafeError}
+ */
 const scrapeYear = async (
   username: string,
   year: number | 'last',
@@ -83,7 +90,10 @@ const scrapeYear = async (
       ? `https://github.com/users/${username}/contributions`
       : `https://github.com/users/${username}/contributions?tab=overview&from=${year}-12-01&to=${year}-12-31`
 
-  const $ = await fromURL(url, requestOptions(username))
+  const $ = await fromURL(url, requestOptions(username)).catch((err) =>
+    onFetchError(err, username),
+  )
+
   const days = $('.js-calendar-graph-table .ContributionCalendar-day')
   const sortedDays = days.get().sort((a, b) => {
     const dateA = a.attribs['data-date'] ?? ''
@@ -186,9 +196,14 @@ const parseDay = (day: Element, tooltipsByDayId: Record<string, Element>) => {
   }
 }
 
+/**
+ * @throws {HTTPError, ClientSafeError}
+ */
 const fetchAllYearsFor = async (username: string) => {
   const url = `https://github.com/${username}?action=show&controller=profiles&tab=contributions&user_id=${username}`
-  const $ = await fromURL(url, requestOptions(username))
+  const $ = await fromURL(url, requestOptions(username)).catch((err) =>
+    onFetchError(err, username),
+  )
 
   return $('.js-year-link')
     .get()
@@ -205,3 +220,44 @@ const requestOptions = (username: string): CheerioRequestOptions => ({
     },
   },
 })
+
+/**
+ * @throws {HTTPError, ClientSafeError}
+ */
+const onFetchError = (error: unknown, username: string) => {
+  if (error instanceof errors.ResponseError)
+    switch (error.statusCode) {
+      case 404:
+        throw new HTTPError(404, `GitHub user "${username}" not found.`)
+      case 429: {
+        throw new HTTPError(429, 'GitHub: Too many requests.', {
+          'retry-after': getUndiciHeader(error.headers, 'retry-after'),
+        })
+      }
+      case 502:
+        throw new HTTPError(502, 'GitHub: Bad gateway.')
+      case 503:
+        throw new HTTPError(503, 'GitHub: Service unavailable.')
+      case 504:
+        throw new HTTPError(504, 'GitHub: Gateway timeout.')
+    }
+
+  throw new ClientSafeError(`Failed to scrape contributions of "${username}"`)
+}
+
+const getUndiciHeader = (
+  headers: errors.ResponseError['headers'],
+  name: string,
+): string | undefined => {
+  if (Array.isArray(headers)) {
+    for (let i = 0; i < headers.length; i += 2) {
+      if (headers[i]?.toLowerCase() === name.toLowerCase()) {
+        return headers[i + 1]
+      }
+    }
+
+    return undefined
+  }
+
+  return headers?.[name.toLowerCase()]?.toString()
+}

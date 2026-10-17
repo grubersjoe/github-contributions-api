@@ -5,7 +5,6 @@ import stableStringify from 'json-stable-stringify'
 import { createHash } from 'node:crypto'
 import { z } from 'zod'
 import { ageInSeconds, CacheItem, createCache } from './cache'
-import { ClientSafeError, HTTPError, isHTTPError } from './errors'
 import { NestedResponse, Response, scrapeContributions } from './github'
 
 export const createRouter = (app: Application) => {
@@ -69,27 +68,7 @@ export const createRouter = (app: Application) => {
       }
     }
 
-    const response = await scrapeContributions(username, query).catch(
-      (error: unknown) => {
-        if (isHTTPError(error)) {
-          switch (error.statusCode) {
-            case 404:
-              throw new HTTPError(404, `GitHub user "${username}" not found.`)
-            case 502:
-              throw new HTTPError(502, `GitHub: Bad gateway.`)
-            case 503:
-              throw new HTTPError(503, `GitHub: Service unavailable.`)
-            case 504:
-              throw new HTTPError(504, `GitHub: Gateway timeout.`)
-          }
-        }
-
-        throw new ClientSafeError(
-          `Failed to scrape contributions of "${username}"`,
-        )
-      },
-    )
-
+    const response = await scrapeContributions(username, query)
     const cacheItem: CacheItem = { ts: Date.now(), response }
 
     Sentry.startSpan(
@@ -117,7 +96,7 @@ export const createRouter = (app: Application) => {
 }
 
 const routeSchema = z.object({
-  // GitHub: Username may only contain alphanumeric characters or single hyphens,
+  // GitHub: Username may only contain alphanumeric characters or single hyphens
   // and cannot begin or end with a hyphen.
   username: z
     .string()

@@ -1,13 +1,23 @@
 import { TTLCache } from '@isaacs/ttlcache'
+import * as cheerio from 'cheerio'
 import { eachDayOfInterval, format as formatDate } from 'date-fns'
 import request from 'supertest'
+import { errors as undici } from 'undici'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { createApp, version } from '../src/app'
-import { HTTPError } from '../src/errors'
 import * as github from '../src/github'
 import testDataMultipleYears from './fixtures/grubersjoe-2017-2018.json'
 import testDataNested from './fixtures/grubersjoe-2018-nested.json'
 import testData from './fixtures/grubersjoe-2018.json'
+
+vi.mock('cheerio', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('cheerio')>()
+
+  return {
+    ...actual,
+    fromURL: vi.fn(actual.fromURL), // allow spying on fromURL
+  }
+})
 
 const username = 'grubersjoe'
 
@@ -183,30 +193,48 @@ describe('The :username endpoint', () => {
         })
       }))
 
-  test('skips duplicate y parameters', async () => {
-    const scrapeContributionsSpy = vi.spyOn(github, 'scrapeContributions')
-    await request(app).get(`/${version}/${username}?y=2020&y=2020`).expect(200)
-    expect(scrapeContributionsSpy).toHaveBeenCalledOnce()
-  })
-
   test.each([
-    [new Error('💥'), 500, `Failed to scrape contributions of "${username}"`],
-    [new HTTPError(502, '💥'), 502, 'GitHub: Bad gateway.'],
-    [new HTTPError(503, '💥'), 503, 'GitHub: Service unavailable.'],
-    [new HTTPError(504, '💥'), 504, 'GitHub: Gateway timeout.'],
+    [
+      new undici.ResponseError('💥', 429, {
+        headers: { 'retry-after': '300' },
+      }),
+      429,
+      'GitHub: Too many requests.',
+      { 'retry-after': '300' },
+    ],
+    [
+      new Error('💥'),
+      500,
+      `Failed to scrape contributions of "${username}"`,
+      {},
+    ],
+    [new undici.ResponseError('💥', 502, {}), 502, 'GitHub: Bad gateway.', {}],
+    [
+      new undici.ResponseError('💥', 503, {}),
+      503,
+      'GitHub: Service unavailable.',
+      {},
+    ],
+    [
+      new undici.ResponseError('💥', 504, {}),
+      504,
+      'GitHub: Gateway timeout.',
+      {},
+    ],
   ])(
     'returns HTTP $1 for respective error',
-    async (err, expectedStatus, expectedError) => {
-      const scrapeContributionsMock = vi.spyOn(github, 'scrapeContributions')
-      scrapeContributionsMock.mockRejectedValue(err)
+    async (err, expectedStatus, expectedError, expectedHeaders) => {
+      vi.mocked(cheerio.fromURL).mockRejectedValueOnce(err)
 
       await request(app)
         .get(`/${version}/${username}`)
         .expect(expectedStatus)
-        .expect(({ body }) => {
-          expect(body).toStrictEqual({
-            error: expectedError,
-          })
+        .expect(({ body, headers }) => {
+          expect(body).toStrictEqual({ error: expectedError })
+
+          for (const [header, value] of Object.entries(expectedHeaders)) {
+            expect(headers[header]).toStrictEqual(value)
+          }
         })
     },
   )

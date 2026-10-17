@@ -2,7 +2,7 @@ import compression from 'compression'
 import cors from 'cors'
 import express, { ErrorRequestHandler } from 'express'
 import { ZodError } from 'zod'
-import { isHTTPError, ClientSafeError, log } from './errors'
+import { ClientSafeError, HTTPError, log } from './errors'
 import { createRouter } from './router'
 
 export const version = 'v4'
@@ -53,8 +53,11 @@ const errorHandler: ErrorRequestHandler = (
     return
   }
 
-  if (isHTTPError(error)) {
-    res.status(error.statusCode).json({ error: error.message })
+  if (error instanceof HTTPError) {
+    res
+      .status(error.statusCode)
+      .set(error.headers)
+      .json({ error: error.message })
   } else if (error instanceof ClientSafeError) {
     res.status(500).json({ error: error.message })
   } else {

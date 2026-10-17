@@ -4,15 +4,18 @@ export class ClientSafeError extends Error {}
 
 export class HTTPError extends Error {
   readonly statusCode: number
+  readonly headers: Record<string, string | undefined>
 
-  constructor(statusCode: number, message: string) {
+  constructor(
+    statusCode: number,
+    message: string,
+    headers?: Record<string, string | undefined>,
+  ) {
     super(message)
     this.statusCode = statusCode
+    this.headers = headers ?? {}
   }
 }
-
-export const isHTTPError = (error: unknown): error is HTTPError =>
-  error instanceof Error && Object.hasOwnProperty.call(error, 'statusCode')
 
 export const log = (message: string, level?: 'warn' | 'error') => {
   const time = styleText('magenta', `[${new Date().toISOString()}]`)
