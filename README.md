@@ -2,12 +2,12 @@
 
 [![CI](https://github.com/grubersjoe/github-contributions-api/actions/workflows/test.yml/badge.svg)](https://github.com/grubersjoe/github-contributions-api/actions/workflows/test.yml)
 
-An API that returns the number of GitHub contributions by scraping a user's
-GitHub profile. This API is used by
+An API that returns a user's GitHub contribution data by scraping their profile.
+It powers the
 [React GitHub Calendar](https://github.com/grubersjoe/react-github-calendar)
-(React component).
+component.
 
-:warning: Results are cached for one hour!
+:warning: Results are cached for one hour.
 
 ## How to run
 
@@ -24,14 +24,12 @@ npm run dev
 
 ## Usage
 
-Send a GET request to the API in the following format:
+Send a GET request to retrieve a user's complete contribution history, with
+totals per year, the count and level of each day:
 
 ```shell
 https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME
 ```
-
-And you will receive the complete GitHub contribution history of that user
-(total per year and for each day):
 
 ```json
 {
@@ -60,8 +58,11 @@ And you will receive the complete GitHub contribution history of that user
 }
 ```
 
-You can also request the data as an object keyed by year, month and day by using
-the `format=nested` query parameter:
+`level` ranges from 0 to 4 and is the intensity GitHub uses to shade the day in
+its contribution calendar.
+
+Add the `format=nested` query parameter to get the contributions as an object
+keyed by year, month and day:
 
 ```shell
 https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?format=nested
@@ -69,35 +70,42 @@ https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?format=nested
 
 ```json
 {
-  "2020": {
-    "1": {
+  "total": {
+    "2020": 492,
+    ...
+  },
+  "contributions": {
+    "2020": {
       "1": {
-        "date": "2020-01-01",
-        "count": 9,
-        "level": 4
-      },
-      "2": {
-        "date": "2020-01-02",
-        "count": 5,
-        "level": 2
-      },
-      "3": {
-        "date": "2020-01-03",
-        "count": 0,
-        "level": 0
+        "1": {
+          "date": "2020-01-01",
+          "count": 9,
+          "level": 4
+        },
+        "2": {
+          "date": "2020-01-02",
+          "count": 0,
+          "level": 0
+        },
+        "3": {
+          "date": "2020-01-03",
+          "count": 5,
+          "level": 2
+        },
+        ...
       },
       ...
     },
-   ...
+    ...
   }
 }
 ```
 
-### Time selection
+### Time range
 
-Use the `y` query parameter to retrieve the data for a specific year, a set of
-years, the last year (GitHub's default view), or the data for all years (default
-when `y` parameter is omitted). A request can list at most 10 years:
+Use the `y` query parameter to select a single year, multiple years, the last
+year (GitHub's default view) or all years (the default). You can list up to 10
+years per request:
 
 ```shell
 https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?y=2020
@@ -105,6 +113,8 @@ https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?y=2016&y=2017
 https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?y=last
 https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?y=all # default
 ```
+
+For example, `y=2016&y=2017` returns:
 
 ```json
 {
@@ -128,9 +138,7 @@ https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?y=all # default
 }
 ```
 
-### Response interface
-
-The responses are structured like this:
+### Response types
 
 ```typescript
 type Contribution = {
@@ -142,7 +150,7 @@ type Contribution = {
 type Response = {
   total: {
     [year: number]: number
-    [year: string]: number // 'lastYear;
+    [year: string]: number // 'lastYear'
   }
   contributions: Array<Contribution>
 }
@@ -150,7 +158,7 @@ type Response = {
 type NestedResponse = {
   total: {
     [year: number]: number
-    [year: string]: number // 'lastYear;
+    [year: string]: number // 'lastYear'
   }
   contributions: {
     [year: number]: {
@@ -173,13 +181,14 @@ type ErrorResponse = {
 
 ### Rate limiting
 
-Uncached requests are limited to 10 per 10 seconds per IP address.
+All requests, including cached ones, are limited to 10 per 10 seconds per IP
+address.
 
 ### Caching
 
-Results are cached for one hour. The API returns the
+Results are cached for one hour. The
 [`age`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Age)
-and the non-standard `x-cache: HIT | MISS` headers to provide more information
-about when the data was last scraped and if the cache was hit. You can enforce
-fresh data using the `cache-control: no-cache` header in the request, but please
-use this responsibly and not per default for every request.
+response header and the non-standard `x-cache: HIT | MISS` header indicate how
+long ago the data was scraped and whether it came from the cache. To bypass the
+cache, send a `cache-control: no-cache` request header. Please use this
+responsibly and not per default for every request.
