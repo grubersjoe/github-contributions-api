@@ -337,6 +337,13 @@ describe('The :username endpoint', () => {
     )
   })
 
+  test('allows cross-origin requests', () =>
+    request(app)
+      .get(`/${version}/${user}?y=2020`)
+      .set('origin', 'https://example.com')
+      .expect(200)
+      .expect('access-control-allow-origin', '*'))
+
   test('does not leak internal errors', async () => {
     vi.spyOn(TTLCache.prototype, 'set').mockImplementation(() => {
       throw new Error('💥')
