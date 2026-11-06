@@ -1,4 +1,4 @@
-name: GitHub tests
+name: GitHub live tests
 on:
   schedule:
     - cron: '12 * * * *' # hourly
@@ -22,5 +22,5 @@ jobs:
       - name: Install dependencies
         run: pnpm install -r --ignore-scripts
 
-      - name: Run GitHub tests
+      - name: Run GitHub live tests
         run: pnpm test:github
