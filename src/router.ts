@@ -110,14 +110,18 @@ const querySchema = z.object({
   y: z
     .union([
       z.string().regex(/^(?:\d+|all|last)$/, {
-        error: 'Invalid input: expected one or more number(s), "all" or "last"',
+        error: 'Invalid input: expected one or more year(s), "all" or "last"',
       }),
-      z.array(
-        z.string().regex(/^\d+$/, {
-          error:
-            'Invalid input: expected one or more number(s), "all" or "last"',
+      z
+        .array(
+          z.string().regex(/^\d+$/, {
+            error:
+              'Invalid input: expected one or more year(s), "all" or "last"',
+          }),
+        )
+        .max(10, {
+          error: `Invalid input: expected at most 10 years`,
         }),
-      ),
     ])
     .optional()
     .transform((y, ctx) => {
@@ -135,13 +139,13 @@ const querySchema = z.object({
       if (!parsedYears.success) {
         ctx.addIssue({
           code: 'invalid_value',
-          message: parsedYears.error.message,
+          message: 'Invalid input: year out of range',
           values: years,
         })
         return z.NEVER
       }
 
-      return uniq(parsedYears.data).sort()
+      return uniq(parsedYears.data).sort((a, b) => a - b)
     }),
   format: z.literal('nested').optional(),
 })

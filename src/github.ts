@@ -95,6 +95,12 @@ const scrapeYear = async (
   )
 
   const days = $('.js-calendar-graph-table .ContributionCalendar-day')
+
+  // GitHub always renders the full calendar, even for years without activity
+  if (days.length === 0) {
+    throw new Error('Failed parsing contribution days')
+  }
+
   const sortedDays = days.get().sort((a, b) => {
     const dateA = a.attribs['data-date'] ?? ''
     const dateB = b.attribs['data-date'] ?? ''
@@ -230,9 +236,12 @@ const onFetchError = (error: unknown, username: string) => {
       case 404:
         throw new HTTPError(404, `GitHub user "${username}" not found.`)
       case 429: {
-        throw new HTTPError(429, 'GitHub: Too many requests.', {
-          'retry-after': getUndiciHeader(error.headers, 'retry-after'),
-        })
+        const retryAfter = getUndiciHeader(error.headers, 'retry-after')
+        throw new HTTPError(
+          429,
+          'GitHub: Too many requests.',
+          retryAfter ? { 'retry-after': retryAfter } : undefined,
+        )
       }
       case 502:
         throw new HTTPError(502, 'GitHub: Bad gateway.')

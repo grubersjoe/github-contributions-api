@@ -1,9 +1,11 @@
 import { TTLCache } from '@isaacs/ttlcache'
 import * as cheerio from 'cheerio'
 import { eachDayOfInterval, format as formatDate } from 'date-fns'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import request from 'supertest'
 import { errors as undici } from 'undici'
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { createApp, version } from '../src/app'
 import * as github from '../src/github'
 import testDataMultipleYears from './fixtures/grubersjoe-2017-2018.json'
@@ -15,14 +17,46 @@ vi.mock('cheerio', async (importOriginal) => {
 
   return {
     ...actual,
-    fromURL: vi.fn(actual.fromURL), // allow spying on fromURL
+    fromURL: vi.fn(),
   }
 })
 
-const username = 'grubersjoe'
+const user = 'grubersjoe'
+const nonExistingUser = 'non-existing'
+
+const readPage = (year: string) =>
+  readFileSync(join(__dirname, `fixtures/grubersjoe-${year}.html`), 'utf8')
+
+const profilePage = readPage('profile')
+const yearPages: Record<string, string> = {
+  1900: readPage('1900'),
+  2017: readPage('2017'),
+  2018: readPage('2018'),
+}
+
+// Serves real pages saved from GitHub. Years without a page get the one of 2018.
+const mockGitHub = (url: string | URL) => {
+  const { href } = new URL(url)
+
+  if (href.includes(nonExistingUser)) {
+    return Promise.reject(new undici.ResponseError('Not Found', 404, {}))
+  }
+
+  const year = /from=(\d+)/.exec(href)?.[1]
+  const page = year ? (yearPages[year] ?? yearPages[2018]) : profilePage
+
+  return Promise.resolve(cheerio.load(page))
+}
+
+const yearsQuery = (count: number) =>
+  Array.from({ length: count }, (_, i) => `y=${2000 + i}`).join('&')
 
 describe('The :username endpoint', () => {
   let app = createApp()
+
+  beforeEach(() => {
+    vi.mocked(cheerio.fromURL).mockReset().mockImplementation(mockGitHub)
+  })
 
   afterEach(() => {
     vi.restoreAllMocks()
@@ -31,7 +65,7 @@ describe('The :username endpoint', () => {
 
   test.each([[''], ['y=all']])('returns all data for query %s', async (y) => {
     await request(app)
-      .get(`/${version}/${username}?${y}`)
+      .get(`/${version}/${user}?${y}`)
       .expect(200)
       .expect(({ body }: { body: github.Response }) => {
         expect(Object.keys(body.total).length).toBeGreaterThanOrEqual(14)
@@ -44,7 +78,7 @@ describe('The :username endpoint', () => {
 
   test('returns data for a single year', () =>
     request(app)
-      .get(`/${version}/${username}?y=2018`)
+      .get(`/${version}/${user}?y=2018`)
       .expect(200)
       .expect(({ body }) => {
         expect(body).toStrictEqual(testData)
@@ -52,7 +86,7 @@ describe('The :username endpoint', () => {
 
   test('returns data for several years', async () =>
     request(app)
-      .get(`/${version}/${username}?y=2017&y=2018`)
+      .get(`/${version}/${user}?y=2017&y=2018`)
       .expect(200)
       .expect(({ body }) => {
         expect(body).toStrictEqual(testDataMultipleYears)
@@ -60,7 +94,7 @@ describe('The :username endpoint', () => {
 
   test('returns data for the last year', () =>
     request(app)
-      .get(`/${version}/${username}?y=last`)
+      .get(`/${version}/${user}?y=last`)
       .expect(200)
       .expect(({ body }: { body: github.Response }) => {
         expect(Object.keys(body.total)).toContain('lastYear')
@@ -69,7 +103,7 @@ describe('The :username endpoint', () => {
 
   test('returns data in the nested format', () =>
     request(app)
-      .get(`/${version}/${username}?y=2018&format=nested`)
+      .get(`/${version}/${user}?y=2018&format=nested`)
       .expect(200)
       .expect(({ body }) => {
         expect(body).toStrictEqual(testDataNested)
@@ -77,7 +111,7 @@ describe('The :username endpoint', () => {
 
   test('returns an empty response if no data is available', () =>
     request(app)
-      .get(`/${version}/${username}?y=1900`)
+      .get(`/${version}/${user}?y=1900`)
       .expect(200)
       .expect(({ body }: { body: github.Response }) => {
         expect(body.total).toStrictEqual({ 1900: 0 })
@@ -93,22 +127,6 @@ describe('The :username endpoint', () => {
           })
         })
       }))
-
-  test('returns HTTP 404 if the user cannot be found', async () => {
-    const logSpy = vi.spyOn(global.console, 'error')
-    const nonExistingUser = '43b83cb5-2d8f-44d3-b01c-98a73af7a15f'
-
-    await request(app)
-      .get(`/${version}/${nonExistingUser}`)
-      .expect(404)
-      .expect(({ body }) => {
-        expect(body).toStrictEqual({
-          error: `GitHub user "${nonExistingUser}" not found.`,
-        })
-      })
-
-    expect(logSpy).not.toHaveBeenCalled()
-  })
 
   test('returns HTTP 400 for invalid username', () =>
     request(app)
@@ -131,7 +149,7 @@ describe('The :username endpoint', () => {
     'returns HTTP 400 for invalid query %s',
     async (y) => {
       await request(app)
-        .get(`/${version}/${username}?${y}`)
+        .get(`/${version}/${user}?${y}`)
         .expect(400)
         .expect(({ body }) => {
           expect(body).toStrictEqual({
@@ -140,7 +158,7 @@ describe('The :username endpoint', () => {
               {
                 code: 'invalid_format',
                 message:
-                  'Invalid input: expected one or more number(s), "all" or "last"',
+                  'Invalid input: expected one or more year(s), "all" or "last"',
                 path: 'y',
               },
             ],
@@ -153,7 +171,7 @@ describe('The :username endpoint', () => {
     'returns HTTP 400 for invalid format query %s',
     async (y) => {
       await request(app)
-        .get(`/${version}/${username}?${y}`)
+        .get(`/${version}/${user}?${y}`)
         .expect(400)
         .expect(({ body }) => {
           expect(body).toStrictEqual({
@@ -170,9 +188,57 @@ describe('The :username endpoint', () => {
     },
   )
 
-  test('combines all validation errors', () =>
+  test('returns HTTP 200 for up to 10 years', async () => {
+    await request(app)
+      .get(`/${version}/${user}?${yearsQuery(10)}`)
+      .expect(200)
+
+    expect(cheerio.fromURL).toHaveBeenCalledTimes(10)
+  })
+
+  test('returns HTTP 400 for more than 10 years', async () => {
+    await request(app)
+      .get(`/${version}/${user}?${yearsQuery(11)}`)
+      .expect(400)
+      .expect(({ body }) => {
+        expect(body).toStrictEqual({
+          error: 'Invalid request',
+          issues: [
+            {
+              code: 'too_big',
+              message: 'Invalid input: expected at most 10 years',
+              path: 'y',
+            },
+          ],
+        })
+      })
+
+    expect(cheerio.fromURL).not.toHaveBeenCalled()
+  })
+
+  test('returns HTTP 400 for years outside the safe integer range', async () => {
+    await request(app)
+      .get(`/${version}/${user}?y=99999999999999999999`)
+      .expect(400)
+      .expect(({ body }) => {
+        expect(body).toStrictEqual({
+          error: 'Invalid request',
+          issues: [
+            {
+              code: 'invalid_value',
+              message: 'Invalid input: year out of range',
+              path: 'y',
+            },
+          ],
+        })
+      })
+
+    expect(cheerio.fromURL).not.toHaveBeenCalled()
+  })
+
+  test('returns HTTP 400 for validation error combination', () =>
     request(app)
-      .get(`/${version}/${username}?y=invalid&format=invalid`)
+      .get(`/${version}/${user}?y=invalid&format=invalid`)
       .expect(400)
       .expect(({ body }) => {
         expect(body).toStrictEqual({
@@ -181,7 +247,7 @@ describe('The :username endpoint', () => {
             {
               code: 'invalid_format',
               message:
-                'Invalid input: expected one or more number(s), "all" or "last"',
+                'Invalid input: expected one or more year(s), "all" or "last"',
               path: 'y',
             },
             {
@@ -193,6 +259,21 @@ describe('The :username endpoint', () => {
         })
       }))
 
+  test('returns HTTP 404 if the user cannot be found', async () => {
+    const logSpy = vi.spyOn(global.console, 'error')
+
+    await request(app)
+      .get(`/${version}/${nonExistingUser}`)
+      .expect(404)
+      .expect(({ body }) => {
+        expect(body).toStrictEqual({
+          error: `GitHub user "${nonExistingUser}" not found.`,
+        })
+      })
+
+    expect(logSpy).not.toHaveBeenCalled()
+  })
+
   test.each([
     [
       new undici.ResponseError('💥', 429, {
@@ -202,12 +283,7 @@ describe('The :username endpoint', () => {
       'GitHub: Too many requests.',
       { 'retry-after': '300' },
     ],
-    [
-      new Error('💥'),
-      500,
-      `Failed to scrape contributions of "${username}"`,
-      {},
-    ],
+    [new Error('💥'), 500, `Failed to scrape contributions of "${user}"`, {}],
     [new undici.ResponseError('💥', 502, {}), 502, 'GitHub: Bad gateway.', {}],
     [
       new undici.ResponseError('💥', 503, {}),
@@ -222,12 +298,12 @@ describe('The :username endpoint', () => {
       {},
     ],
   ])(
-    'returns HTTP $1 for respective error',
+    'returns HTTP $1 for GitHub $1 error',
     async (err, expectedStatus, expectedError, expectedHeaders) => {
       vi.mocked(cheerio.fromURL).mockRejectedValueOnce(err)
 
       await request(app)
-        .get(`/${version}/${username}`)
+        .get(`/${version}/${user}`)
         .expect(expectedStatus)
         .expect(({ body, headers }) => {
           expect(body).toStrictEqual({ error: expectedError })
@@ -239,13 +315,35 @@ describe('The :username endpoint', () => {
     },
   )
 
+  test('returns HTTP 500 for a calendar without any days', async () => {
+    const logSpy = vi.spyOn(global.console, 'error')
+    vi.mocked(cheerio.fromURL).mockResolvedValueOnce(
+      cheerio.load(`
+        <div class="js-yearly-contributions">
+          <h2>0 contributions in 2020</h2>
+        </div>
+      `),
+    )
+
+    await request(app)
+      .get(`/${version}/${user}?y=2020`)
+      .expect(500)
+      .expect(({ body }) => {
+        expect(body).toStrictEqual({ error: 'Internal server error' })
+      })
+
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Failed parsing contribution days'),
+    )
+  })
+
   test('does not leak internal errors', async () => {
     vi.spyOn(TTLCache.prototype, 'set').mockImplementation(() => {
       throw new Error('💥')
     })
 
     await request(app)
-      .get(`/${version}/${username}`)
+      .get(`/${version}/${user}`)
       .expect(500)
       .expect(({ body }) => {
         expect(body).toStrictEqual({
@@ -256,7 +354,7 @@ describe('The :username endpoint', () => {
 
   test('caches responses', async () => {
     const resp = await request(app)
-      .get(`/${version}/${username}?y=2020`)
+      .get(`/${version}/${user}?y=2020`)
       .expect(200)
       .expect(({ headers }) => {
         expect(Number(headers.age)).toBe(0)
@@ -267,7 +365,7 @@ describe('The :username endpoint', () => {
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
     await request(app)
-      .get(`/${version}/${username.toUpperCase()}?y=2020`) // ensure username casing does not matter
+      .get(`/${version}/${user.toUpperCase()}?y=2020`) // ensure username casing does not matter
       .set('if-none-match', resp.get('etag') ?? '')
       .expect(304)
       .expect(({ headers }) => {
@@ -278,7 +376,7 @@ describe('The :username endpoint', () => {
 
   test('ignores cache for cache-control: no-cache', async () => {
     await request(app)
-      .get(`/${version}/${username}?y=2020`)
+      .get(`/${version}/${user}?y=2020`)
       .expect(200)
       .expect(({ headers }) => {
         expect(Number(headers.age)).toBe(0)
@@ -286,7 +384,7 @@ describe('The :username endpoint', () => {
       })
 
     await request(app)
-      .get(`/${version}/${username}?y=2020`)
+      .get(`/${version}/${user}?y=2020`)
       .set('cache-control', 'no-cache')
       .expect(200)
       .expect(({ headers }) => {
@@ -301,10 +399,10 @@ describe('The :username endpoint', () => {
     process.env.NODE_ENV = 'production' // enable rate limits
     app.set('rate_limit', 1)
 
-    await request(app).get(`/${version}/${username}?y=2020`).expect(200)
+    await request(app).get(`/${version}/${user}?y=2020`).expect(200)
 
     await request(app)
-      .get(`/${version}/${username}?y=2020`)
+      .get(`/${version}/${user}?y=2020`)
       .expect(429)
       .expect(({ body }) => {
         expect(body).toEqual({

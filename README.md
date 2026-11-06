@@ -97,7 +97,7 @@ https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?format=nested
 
 Use the `y` query parameter to retrieve the data for a specific year, a set of
 years, the last year (GitHub's default view), or the data for all years (default
-when `y` parameter is omitted):
+when `y` parameter is omitted). A request can list at most 10 years:
 
 ```shell
 https://github-contributions-api.jogruber.de/v4/GITHUB_USERNAME?y=2020

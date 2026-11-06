@@ -4,12 +4,12 @@ export class ClientSafeError extends Error {}
 
 export class HTTPError extends Error {
   readonly statusCode: number
-  readonly headers: Record<string, string | undefined>
+  readonly headers: Record<string, string>
 
   constructor(
     statusCode: number,
     message: string,
-    headers?: Record<string, string | undefined>,
+    headers?: Record<string, string>,
   ) {
     super(message)
     this.statusCode = statusCode
