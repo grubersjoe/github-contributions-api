@@ -1,0 +1,26 @@
+name: GitHub tests
+on:
+  schedule:
+    - cron: '12 * * * *' # hourly
+  workflow_dispatch: # manually
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: node
+
+      - uses: pnpm/action-setup@v6.1.0
+        name: Install pnpm
+        with:
+          version: 12
+          run_install: false
+
+      - name: Install dependencies
+        run: pnpm install -r --ignore-scripts
+
+      - name: Run GitHub tests
+        run: pnpm test:github

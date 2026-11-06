@@ -205,7 +205,7 @@ const parseDay = (day: Element, tooltipsByDayId: Record<string, Element>) => {
 /**
  * @throws {HTTPError, ClientSafeError}
  */
-const fetchAllYearsFor = async (username: string) => {
+export const fetchAllYearsFor = async (username: string) => {
   const url = `https://github.com/${username}?action=show&controller=profiles&tab=contributions&user_id=${username}`
   const $ = await fromURL(url, requestOptions(username)).catch((err) =>
     onFetchError(err, username),

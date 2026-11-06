@@ -20,6 +20,7 @@
     "prestart": "npm run build",
     "start": "node build/server.js",
     "test": "vitest run",
+    "test:github": "vitest run --config vitest.github.config.mts",
     "typecheck": "tsc"
   },
   "repository": {
