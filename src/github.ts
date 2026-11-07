@@ -6,6 +6,8 @@ import { ReqQuery } from './router'
 
 type Level = 0 | 1 | 2 | 3 | 4
 
+const isLevel = (n: number): n is Level => n >= 0 && n <= 4
+
 type Contribution = {
   date: string
   count: number
@@ -17,7 +19,7 @@ export type Response = {
     [year: number]: number
     [year: string]: number // 'lastYear;
   }
-  contributions: Array<Contribution>
+  contributions: Contribution[]
 }
 
 export type NestedResponse = {
@@ -35,46 +37,44 @@ export const scrapeContributions = async (
   username: string,
   query: ReqQuery,
 ): Promise<Response | NestedResponse> => {
-  const requests = async () => {
-    if (query.y === 'all') {
-      const allYears = await fetchAllYearsFor(username)
-      return allYears.map((year) => scrapeYear(username, year, query.format))
-    }
+  const years: (number | 'last')[] =
+    query.y === 'all'
+      ? await fetchAllYearsFor(username)
+      : query.y === 'last'
+        ? [query.y]
+        : query.y
 
-    if (query.y === 'last') {
-      return [scrapeYear(username, query.y, query.format)]
-    }
+  if (query.format === 'nested') {
+    const responses = await Promise.all(
+      years.map((year) => scrapeYearNested(username, year)),
+    )
 
-    return query.y.map((year) => scrapeYear(username, year, query.format))
-  }
-
-  return Promise.all(await requests()).then((contributions) => {
-    if (query.format === 'nested') {
-      return (contributions as Array<NestedResponse>).reduce(
-        (resp, curr) => ({
-          total: { ...resp.total, ...curr.total },
-          contributions: { ...resp.contributions, ...curr.contributions },
-        }),
-        {
-          total: {},
-          contributions: {},
-        },
-      )
-    }
-
-    return (contributions as Array<Response>).reduce(
-      (resp, curr) => {
-        return {
-          total: { ...resp.total, ...curr.total },
-          contributions: [...resp.contributions, ...curr.contributions],
-        }
-      },
+    return responses.reduce<NestedResponse>(
+      (resp, curr) => ({
+        total: { ...resp.total, ...curr.total },
+        contributions: { ...resp.contributions, ...curr.contributions },
+      }),
       {
         total: {},
-        contributions: [],
+        contributions: {},
       },
     )
-  })
+  }
+
+  const responses = await Promise.all(
+    years.map((year) => scrapeYear(username, year)),
+  )
+
+  return responses.reduce<Response>(
+    (resp, curr) => ({
+      total: { ...resp.total, ...curr.total },
+      contributions: [...resp.contributions, ...curr.contributions],
+    }),
+    {
+      total: {},
+      contributions: [],
+    },
+  )
 }
 
 /**
@@ -83,8 +83,45 @@ export const scrapeContributions = async (
 const scrapeYear = async (
   username: string,
   year: number | 'last',
-  format?: 'nested',
-): Promise<Response | NestedResponse> => {
+): Promise<Response> => {
+  const { total, days, tooltipsByDayId } = await scrapeCalendar(username, year)
+
+  return {
+    total,
+    contributions: days.map(
+      (day) => parseDay(day, tooltipsByDayId).contribution,
+    ),
+  }
+}
+
+/**
+ * @throws {HTTPError, ClientSafeError}
+ */
+const scrapeYearNested = async (
+  username: string,
+  year: number | 'last',
+): Promise<NestedResponse> => {
+  const { total, days, tooltipsByDayId } = await scrapeCalendar(username, year)
+
+  return days.reduce<NestedResponse>(
+    (data, day) => {
+      const { date, contribution } = parseDay(day, tooltipsByDayId)
+      const [y, m, d] = date
+
+      data.contributions[y] ??= {}
+      data.contributions[y][m] ??= {}
+      data.contributions[y][m][d] = contribution
+
+      return data
+    },
+    { total, contributions: {} },
+  )
+}
+
+/**
+ * @throws {HTTPError, ClientSafeError}
+ */
+const scrapeCalendar = async (username: string, year: number | 'last') => {
   const url =
     year === 'last'
       ? `https://github.com/users/${username}/contributions`
@@ -101,7 +138,7 @@ const scrapeYear = async (
     throw new Error('Failed parsing contribution days')
   }
 
-  const sortedDays = days.get().sort((a, b) => {
+  const sortedDays = days.get().toSorted((a, b) => {
     const dateA = a.attribs['data-date'] ?? ''
     const dateB = b.attribs['data-date'] ?? ''
 
@@ -126,32 +163,10 @@ const scrapeYear = async (
       return map
     }, {})
 
-  const response = {
-    total: {
-      [year === 'last' ? 'lastYear' : year]: total,
-    },
-    contributions: {},
-  }
-
-  if (format === 'nested') {
-    return sortedDays.reduce<NestedResponse>((data, day) => {
-      const { date, contribution } = parseDay(day, tooltipsByDayId)
-      const [y, m, d] = date
-
-      data.contributions[y] ??= {}
-      data.contributions[y][m] ??= {}
-      data.contributions[y][m][d] = contribution
-
-      return data
-    }, response)
-  }
-
   return {
-    ...response,
-    contributions: sortedDays.map(
-      (day) => parseDay(day, tooltipsByDayId).contribution,
-      tooltipsByDayId,
-    ),
+    total: { [year === 'last' ? 'lastYear' : year]: total },
+    days: sortedDays,
+    tooltipsByDayId,
   }
 }
 
@@ -180,13 +195,13 @@ const parseDay = (day: Element, tooltipsByDayId: Record<string, Element>) => {
     }
   }
 
-  const level = parseInt(attr.level) as Level
-
   if (isNaN(count)) {
     throw new Error('Failed parsing contribution count')
   }
 
-  if (isNaN(level)) {
+  const level = parseInt(attr.level)
+
+  if (!isLevel(level)) {
     throw new Error('Failed parsing contribution level')
   }
 
@@ -220,8 +235,8 @@ const requestOptions = (username: string): CheerioRequestOptions => ({
   requestOptions: {
     method: 'GET',
     headers: {
-      accept: 'text/html',
-      referer: `https://github.com/${username}`,
+      'accept': 'text/html',
+      'referer': `https://github.com/${username}`,
       'x-requested-with': 'XMLHttpRequest',
     },
   },

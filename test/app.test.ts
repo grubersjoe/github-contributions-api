@@ -84,7 +84,7 @@ describe('API', () => {
         expect(body).toStrictEqual(testData)
       }))
 
-  test('returns data for several years', async () =>
+  test('returns data for several years', () =>
     request(app)
       .get(`/${version}/${user}?y=2017&y=2018`)
       .expect(200)
@@ -369,7 +369,9 @@ describe('API', () => {
       })
 
     // ensure the age header changes
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    await new Promise((resolve) => {
+      setTimeout(resolve, 1000)
+    })
 
     await request(app)
       .get(`/${version}/${user.toUpperCase()}?y=2020`) // ensure username casing does not matter
@@ -412,7 +414,7 @@ describe('API', () => {
       .get(`/${version}/${user}?y=2020`)
       .expect(429)
       .expect(({ body }) => {
-        expect(body).toEqual({
+        expect(body).toStrictEqual({
           error: 'Too many requests, please try again later.',
         })
       })

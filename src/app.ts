@@ -38,7 +38,6 @@ const errorHandler: ErrorRequestHandler = (
   _req,
   res,
   // Do not remove. Express.js detects error handlers by parameter arity (great idea).
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _next,
 ) => {
   if (error instanceof ZodError) {

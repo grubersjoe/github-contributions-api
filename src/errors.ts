@@ -1,8 +1,11 @@
 import { styleText } from 'node:util'
 
-export class ClientSafeError extends Error {}
+export class ClientSafeError extends Error {
+  override name = 'ClientSafeError'
+}
 
 export class HTTPError extends Error {
+  override name = 'HTTPError'
   readonly statusCode: number
   readonly headers: Record<string, string>
 

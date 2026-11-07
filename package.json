@@ -14,7 +14,7 @@
     "check": "pnpm install --frozen-lockfile --ignore-scripts && prettier -c . && pnpm typecheck && pnpm lint && pnpm test",
     "dev": "nodemon src/server.ts --exec ts-node src/server.ts",
     "format": "prettier --write .",
-    "lint": "eslint .",
+    "lint": "oxlint",
     "postinstall": "npm run build",
     "prepare": "husky",
     "prestart": "npm run build",
@@ -50,7 +50,6 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
     "@tsconfig/bases": "^1.0.28",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
@@ -59,19 +58,19 @@
     "@types/supertest": "^7.2.1",
     "@vitest/coverage-v8": "^5.0.2",
     "date-fns": "^4.4.0",
-    "eslint": "^10.11.0",
-    "globals": "^17.12.0",
     "husky": "^9.1.7",
     "nodemon": "^3.1.14",
+    "oxlint": "^1.91.0",
+    "oxlint-tsgolint": "^7.0.2005",
     "prettier": "^3.9.9",
     "supertest": "^7.3.0",
     "ts-node": "^10.9.2",
-    "typescript": "^6.0.3",
-    "typescript-eslint": "^8.70.1",
+    "typescript": "^7.0.2",
     "vitest": "^5.0.2"
   },
   "prettier": {
     "proseWrap": "always",
+    "quoteProps": "consistent",
     "semi": false,
     "singleQuote": true
   }

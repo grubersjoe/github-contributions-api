@@ -16,10 +16,11 @@ const server = app.listen(port, (error) => {
 
 const shutdown = (signal: NodeJS.Signals) => {
   server.closeAllConnections()
-  server.close(async () => {
+  server.close(() => {
     log(`${signal} - Server closed.`)
-    await Sentry.close(2000)
-    process.exit(0)
+    void Sentry.close(2000).finally(() => {
+      process.exit(0)
+    })
   })
 }
 

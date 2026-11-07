@@ -13,7 +13,7 @@ export const createRouter = (app: Application) => {
 
   const limiter = rateLimit({
     windowMs: 10 * 1000, // 10 seconds
-    limit: () => app.get('rate_limit') ?? 10,
+    limit: () => app.get('rate_limit') ?? 10, // oxlint-disable-line no-unsafe-return
     skip: () => process.env.NODE_ENV === 'test', // ignore tests
     standardHeaders: 'draft-8',
     legacyHeaders: false,
@@ -24,7 +24,7 @@ export const createRouter = (app: Application) => {
         },
       })
 
-      return res
+      res
         .status(options.statusCode)
         .send({ error: 'Too many requests, please try again later.' })
     },
@@ -145,7 +145,7 @@ const querySchema = z.object({
         return z.NEVER
       }
 
-      return uniq(parsedYears.data).sort((a, b) => a - b)
+      return uniq(parsedYears.data).toSorted((a, b) => a - b)
     }),
   format: z.literal('nested').optional(),
 })
@@ -155,11 +155,11 @@ export type ReqQuery = z.output<typeof querySchema>
 
 type ErrorResponse = {
   error: string
-  issues?: Array<{
+  issues?: {
     code: string
     path: string
     message: string
-  }>
+  }[]
 }
 
 type Req = Request<
@@ -180,4 +180,4 @@ const getCacheKey = (username: string, query: ReqQuery) => {
   return `cache-${username.toLowerCase()}-${queryHash}`
 }
 
-const uniq = <T = unknown>(a: Array<T>) => [...new Set(a)]
+const uniq = <T = unknown>(a: T[]) => [...new Set(a)]

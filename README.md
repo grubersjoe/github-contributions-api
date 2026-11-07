@@ -152,7 +152,7 @@ type Response = {
     [year: number]: number
     [year: string]: number // 'lastYear'
   }
-  contributions: Array<Contribution>
+  contributions: Contribution[]
 }
 
 type NestedResponse = {
@@ -171,11 +171,11 @@ type NestedResponse = {
 
 type ErrorResponse = {
   error: string
-  issues?: Array<{
+  issues?: {
     code: string
     path: string
     message: string
-  }>
+  }[]
 }
 ```
 

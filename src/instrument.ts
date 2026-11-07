@@ -9,7 +9,7 @@ const gitHash = () => {
     }).trim()
   } catch (error) {
     console.error(`Failed to determine git hash: ${String(error)}`)
-    return undefined
+    throw error
   }
 }
 
