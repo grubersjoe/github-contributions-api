@@ -51,7 +51,7 @@ const mockGitHub = (url: string | URL) => {
 const yearsQuery = (count: number) =>
   Array.from({ length: count }, (_, i) => `y=${2000 + i}`).join('&')
 
-describe('The :username endpoint', () => {
+describe('API', () => {
   let app = createApp()
 
   beforeEach(() => {
