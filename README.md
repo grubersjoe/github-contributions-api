@@ -3,9 +3,6 @@
 [![CI](https://github.com/grubersjoe/github-contributions-api/actions/workflows/test.yml/badge.svg)](https://github.com/grubersjoe/github-contributions-api/actions/workflows/test.yml)
 
 An API that returns a user's GitHub contribution data by scraping their profile.
-It powers the
-[React GitHub Calendar](https://github.com/grubersjoe/react-github-calendar)
-component.
 
 :warning: Results are cached for one hour.
 
