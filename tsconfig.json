@@ -2,6 +2,8 @@
   "extends": ["@tsconfig/bases/strictest", "@tsconfig/bases/node22"],
   "compilerOptions": {
     "noEmit": true,
+    "erasableSyntaxOnly": true,
+    "rewriteRelativeImportExtensions": true,
     "noPropertyAccessFromIndexSignature": false,
     "noUncheckedIndexedAccess": false
   }

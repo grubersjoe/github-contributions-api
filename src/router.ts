@@ -1,11 +1,15 @@
 import * as Sentry from '@sentry/node'
-import { Application, type Request, Router } from 'express'
+import { type Application, type Request, Router } from 'express'
 import rateLimit from 'express-rate-limit'
 import stableStringify from 'json-stable-stringify'
 import { createHash } from 'node:crypto'
 import { z } from 'zod'
-import { ageInSeconds, CacheItem, createCache } from './cache'
-import { NestedResponse, Response, scrapeContributions } from './github'
+import { ageInSeconds, type CacheItem, createCache } from './cache.ts'
+import {
+  type NestedResponse,
+  type Response,
+  scrapeContributions,
+} from './github.ts'
 
 export const createRouter = (app: Application) => {
   const router = Router()

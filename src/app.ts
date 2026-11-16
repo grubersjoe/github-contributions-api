@@ -1,9 +1,9 @@
 import compression from 'compression'
 import cors from 'cors'
-import express, { ErrorRequestHandler } from 'express'
+import express, { type ErrorRequestHandler } from 'express'
 import { ZodError } from 'zod'
-import { ClientSafeError, HTTPError, log } from './errors'
-import { createRouter } from './router'
+import { ClientSafeError, HTTPError, log } from './errors.ts'
+import { createRouter } from './router.ts'
 
 export const version = 'v4'
 

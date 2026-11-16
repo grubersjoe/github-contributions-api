@@ -7,12 +7,12 @@
   "private": true,
   "main": "build/server.js",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.18"
   },
   "scripts": {
     "build": "rm -rf build/* && tsc -p tsconfig.build.json",
     "check": "pnpm install --frozen-lockfile --ignore-scripts && prettier -c . && pnpm typecheck && pnpm lint && pnpm test",
-    "dev": "nodemon src/server.ts --exec ts-node src/server.ts",
+    "dev": "node --watch src/server.ts",
     "format": "prettier --write .",
     "lint": "oxlint",
     "postinstall": "npm run build",
@@ -59,12 +59,10 @@
     "@vitest/coverage-v8": "^5.1.0",
     "date-fns": "^4.4.0",
     "husky": "^9.1.7",
-    "nodemon": "^3.1.14",
     "oxlint": "^1.92.0",
     "oxlint-tsgolint": "^7.0.2006",
     "prettier": "^3.9.10",
     "supertest": "^7.3.2",
-    "ts-node": "^10.9.2",
     "typescript": "^7.0.2",
     "vitest": "^5.1.0"
   },

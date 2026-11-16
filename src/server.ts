@@ -1,7 +1,7 @@
-import './instrument' // Must be the very first import
+import './instrument.ts' // Must be the very first import
 import * as Sentry from '@sentry/node'
-import { createApp } from './app'
-import { log } from './errors'
+import { createApp } from './app.ts'
+import { log } from './errors.ts'
 
 const app = createApp()
 const port = process.env.PORT ?? 8080

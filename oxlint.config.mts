@@ -33,6 +33,7 @@ export default defineConfig({
     'require-unicode-regexp': 'off',
     'typescript/array-type': 'error',
     'typescript/consistent-type-definitions': ['error', 'type'],
+    'typescript/consistent-type-imports': 'error',
     'typescript/no-explicit-any': 'error',
     'typescript/no-import-type-side-effects': 'error',
     'typescript/no-inferrable-types': 'error',

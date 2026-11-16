@@ -1,8 +1,8 @@
-import { CheerioRequestOptions, fromURL } from 'cheerio'
-import { Element, isText } from 'domhandler'
+import { type CheerioRequestOptions, fromURL } from 'cheerio'
+import { type Element, isText } from 'domhandler'
 import { errors } from 'undici'
-import { ClientSafeError, HTTPError } from './errors'
-import { ReqQuery } from './router'
+import { ClientSafeError, HTTPError } from './errors.ts'
+import type { ReqQuery } from './router.ts'
 
 type Level = 0 | 1 | 2 | 3 | 4
 

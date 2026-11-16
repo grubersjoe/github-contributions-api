@@ -1,6 +1,6 @@
 import { TTLCache } from '@isaacs/ttlcache'
 import * as Sentry from '@sentry/node'
-import { NestedResponse, Response } from './github'
+import type { NestedResponse, Response } from './github.ts'
 
 export type CacheItem = {
   ts: number // UNIX timestamp in ms

@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/node'
 import { execFileSync } from 'node:child_process'
-import { log } from './errors'
+import { log } from './errors.ts'
 
 const gitHash = () => {
   try {
