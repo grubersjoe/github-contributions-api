@@ -1,8 +1,8 @@
 import request from 'supertest'
 import { describe, expect, test } from 'vitest'
-import { createApp, version } from '../src/app'
-import * as github from '../src/github'
-import testData from './fixtures/grubersjoe-2018.json'
+import { createApp, version } from '../src/app.ts'
+import * as github from '../src/github.ts'
+import testData from './fixtures/grubersjoe-2018.json' with { type: 'json' }
 
 // These tests query GitHub directly to detect changes of its responses.
 const username = 'grubersjoe'

@@ -1,4 +1,3 @@
-import './instrument.ts' // Must be the very first import
 import * as Sentry from '@sentry/node'
 import { createApp } from './app.ts'
 import { log } from './errors.ts'

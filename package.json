@@ -5,6 +5,7 @@
   "author": "Jonathan Gruber <gruberjonathan@gmail.com>",
   "license": "MIT",
   "private": true,
+  "type": "module",
   "main": "build/server.js",
   "engines": {
     "node": ">=22.18"
@@ -12,13 +13,13 @@
   "scripts": {
     "build": "rm -rf build/* && tsc -p tsconfig.build.json",
     "check": "pnpm install --frozen-lockfile --ignore-scripts && prettier -c . && pnpm typecheck && pnpm lint && pnpm test",
-    "dev": "node --watch src/server.ts",
+    "dev": "node --watch --import ./src/instrument.ts src/server.ts",
     "format": "prettier --write .",
     "lint": "oxlint",
     "postinstall": "npm run build",
     "prepare": "husky",
     "prestart": "npm run build",
-    "start": "node build/server.js",
+    "start": "node --import ./build/instrument.js build/server.js",
     "test": "vitest run",
     "test:github": "vitest run --config vitest.github.config.mts",
     "typecheck": "tsc"

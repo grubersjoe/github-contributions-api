@@ -6,14 +6,14 @@ import { join } from 'node:path'
 import request from 'supertest'
 import { errors as undici } from 'undici'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { createApp, version } from '../src/app'
-import * as github from '../src/github'
-import testDataMultipleYears from './fixtures/grubersjoe-2017-2018.json'
-import testDataNested from './fixtures/grubersjoe-2018-nested.json'
-import testData from './fixtures/grubersjoe-2018.json'
+import { createApp, version } from '../src/app.ts'
+import type * as github from '../src/github.ts'
+import testDataMultipleYears from './fixtures/grubersjoe-2017-2018.json' with { type: 'json' }
+import testDataNested from './fixtures/grubersjoe-2018-nested.json' with { type: 'json' }
+import testData from './fixtures/grubersjoe-2018.json' with { type: 'json' }
 
 vi.mock('cheerio', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('cheerio')>()
+  const actual = await importOriginal<typeof cheerio>()
 
   return {
     ...actual,
@@ -25,7 +25,10 @@ const user = 'grubersjoe'
 const nonExistingUser = 'non-existing'
 
 const readPage = (year: string) =>
-  readFileSync(join(__dirname, `fixtures/grubersjoe-${year}.html`), 'utf8')
+  readFileSync(
+    join(import.meta.dirname, `fixtures/grubersjoe-${year}.html`),
+    'utf8',
+  )
 
 const profilePage = readPage('profile')
 const yearPages: Record<string, string> = {
