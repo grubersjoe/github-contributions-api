@@ -11,15 +11,18 @@ component.
 
 ## How to run
 
+Node and pnpm are managed with [mise](https://mise.jdx.dev):
+
 ```shell
-npm install
-npm start
+mise install
+pnpm install
+pnpm start
 ```
 
 For development:
 
 ```shell
-npm run dev
+pnpm dev
 ```
 
 ## Usage

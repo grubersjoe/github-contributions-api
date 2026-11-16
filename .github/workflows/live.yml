@@ -9,15 +9,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
 
-      - uses: actions/setup-node@v7.0.0
-        with:
-          node-version: node
-
-      - uses: pnpm/action-setup@v6.1.0
-        name: Install pnpm
-        with:
-          version: 12
-          run_install: false
+      - uses: jdx/mise-action@v5
+        name: Install tools (mise)
 
       - name: Install dependencies
         run: pnpm install -r --ignore-scripts
