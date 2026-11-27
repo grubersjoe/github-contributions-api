@@ -253,7 +253,7 @@ const onFetchError = (error: unknown, username: string) => {
       case 429: {
         const retryAfter = getUndiciHeader(error.headers, 'retry-after')
         throw new HTTPError(
-          429,
+          503,
           'GitHub: Too many requests.',
           retryAfter ? { 'retry-after': retryAfter } : undefined,
         )

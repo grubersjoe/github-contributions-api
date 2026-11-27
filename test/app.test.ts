@@ -282,7 +282,7 @@ describe('API', () => {
       new undici.ResponseError('💥', 429, {
         headers: { 'retry-after': '300' },
       }),
-      429,
+      503,
       'GitHub: Too many requests.',
       { 'retry-after': '300' },
     ],
